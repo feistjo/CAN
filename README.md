@@ -7,6 +7,9 @@ That also means that be very careful when you're updating this repo because if y
 
 If you don't know what CAN is, read this document [here](https://docs.google.com/document/d/1XAJNA9vFf0h5ruzI_uM2yF3VfZlPSxpRNXcBMb-HSx4/edit?usp=sharing)
 
+This project requires VS Code's PlatformIO  extension to work. If you aren't familiar with PlatformIO or VS Code, see this setup tutorial [here](https://docs.google.com/document/d/1lHxgOpmPJfi5fyBfCM1aA54dtm3wqHcFUew8G-NeXwE/edit?usp=sharing)
+
+
 ### Coverage
 
 This code base is intended to offer CAN functionality for all the hardware we have on the car via a single interface. This allows for the particular hardware you're working on to be abstracted away and for uniform libraries for all our hardware to be written. 
