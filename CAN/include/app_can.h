@@ -30,7 +30,7 @@
 
 //~~~~~~~~~~ Structs ~~~~~~~~~~
 typedef struct app_can_message_t {
-    uint8_t id = 0x0;
+    uint16_t id = 0x0;
     uint8_t len = 0x0;
     uint8_t data[8];
 } app_can_message_t;

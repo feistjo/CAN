@@ -74,6 +74,7 @@ app_can_message_t* app_can_read(){
 
 		CAN_frame_t tx_frame;
 		tx_frame.FIR.B.FF = CAN_frame_std;
+		bool ret = false;
 
 		tx_frame.MsgID = msg->id;
 		tx_frame.FIR.B.DLC = msg->len;
@@ -82,9 +83,9 @@ app_can_message_t* app_can_read(){
 			tx_frame.data.u8[i] = msg->data[i];
 		}
 
-		ESP32Can.CANWriteFrame(&tx_frame);
-
-		return true; 
+		ret = (ESP32Can.CANWriteFrame(&tx_frame) != -1);
+		
+		return ret; 
 
 	}
 
