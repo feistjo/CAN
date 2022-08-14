@@ -26,6 +26,7 @@
  * SOFTWARE.
  */
 
+
 #ifndef __DRIVERS_CAN_H__
 #define __DRIVERS_CAN_H__
 
@@ -82,8 +83,8 @@ typedef enum {
 
 /** \brief CAN Filter structure */
 typedef struct {
-    CAN_filter_mode_t 	FM:1;          		/**< \brief [0:0] Filter Mode */
-    uint8_t 			ACR0;				/**< \brief Acceptance Code Register ACR0 */
+	CAN_filter_mode_t 	FM:1;          		/**< \brief [0:0] Filter Mode */
+	uint8_t 			ACR0;				/**< \brief Acceptance Code Register ACR0 */
 	uint8_t 			ACR1;				/**< \brief Acceptance Code Register ACR1 */
 	uint8_t 			ACR2;				/**< \brief Acceptance Code Register ACR2 */
 	uint8_t 			ACR3;				/**< \brief Acceptance Code Register ACR3 */

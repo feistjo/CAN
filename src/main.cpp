@@ -2,8 +2,9 @@
 #include "app_can.h"
 
 #define SERIAL_DEBUG
-#define LED_PIN 2
-#define ALLOWED_CAN_FAULTS 5
+#define ALLOWED_CAN_FAULTS 1000
+#define TEST_READ
+#define TEST_WRITE
 
 //This is an example main file. Do not use this in your code. Only used for testing purposes. 
 struct example_timer_t {
@@ -19,12 +20,12 @@ bool can_fault;
 void setup() {
 	Serial.begin(115200);
 
-	pinMode(LED_PIN, OUTPUT);
-	digitalWrite(LED_PIN, HIGH);
+	// pinMode(LED_PIN, OUTPUT);
+	// digitalWrite(LED_PIN, HIGH);
 
 	app_can_init();
 
-	tx_msg.id = 0x420;
+	tx_msg.id = 0x410;
 	tx_msg.len = 0x8;
 	for(int i = 0; i < tx_msg.len; i++){
 		tx_msg.data[i] = i;
@@ -33,7 +34,7 @@ void setup() {
 	can_fault_counter = 0;
 	can_fault = false;
 
-	t1.dur = 10;
+	t1.dur = 100;
 	t2.dur = 100;
 	t3.dur = 100;
 	t1.ref = millis();
@@ -43,8 +44,10 @@ void setup() {
 
 void loop() {
 	//Read task every 10ms
+	#ifdef TEST_READ
 	if(t1.ref + t1.dur <= millis()){
 		t1.ref = millis();
+		Serial.println("Reading CAN message: ");
 
 		app_can_message_t* rx_msg_ptr = app_can_read();
 
@@ -52,9 +55,9 @@ void loop() {
 
 		#ifdef SERIAL_DEBUG
 		
-			Serial.printf("ID: %u \t Len: %u \t Data: ", rx_msg_ptr->id, rx_msg_ptr->len);
+			Serial.printf("ID: %X \t Len: %u \t Data: ", rx_msg_ptr->id, rx_msg_ptr->len);
 			for(int i = 0; i < rx_msg_ptr->len; i++){
-				Serial.printf("%u \t", rx_msg_ptr->data[i]);
+				Serial.printf("%X \t", rx_msg_ptr->data[i]);
 			}
 
 			Serial.println("");
@@ -64,8 +67,10 @@ void loop() {
 		}
 
 	}
+	#endif
 
 	//Write task every 100ms 
+	#ifdef TEST_WRITE
 	if(t2.ref + t2.dur <= millis()){
 		t2.ref = millis();
 
@@ -73,7 +78,9 @@ void loop() {
 
 			tx_msg.data[0]++;
 
-			Serial.println("Sending message...");
+			#ifdef SERIAL_DEBUG
+				// Serial.println("Sending message...");
+			#endif
 
 			//This is currently hard coded into CAN.c but should be updated in the future
 			unsigned long tx_timeout_duration = 1000UL; 
@@ -109,15 +116,12 @@ void loop() {
 
 		}
 	}
+	#endif
 
 	if(t3.ref + t3.dur <= millis()){
 		t3.ref = millis();
 
-		if(digitalRead(LED_PIN)){
-			digitalWrite(LED_PIN, LOW);
-		} else {
-			digitalWrite(LED_PIN, HIGH);
-		}
+		//Do something 
 
 	}
 }
