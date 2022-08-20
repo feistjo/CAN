@@ -1,5 +1,6 @@
 //app_can.cpp
 /* ~~~~~~~~~~ INCLUDES ~~~~~~~~~~ */
+#include <Arduino.h>
 #include "app_can.h"
 
 /* ~~~~~~~~~~ VARIABLES ~~~~~~~~~~ */
