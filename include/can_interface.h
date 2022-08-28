@@ -13,7 +13,7 @@ public:
     void SetID(uint16_t id) { id_ = id; }
     uint8_t GetLen() const { return len_; }
     void SetLen(uint8_t len) { len_ = len; }
-    std::vector<uint8_t> GetData() { return data_; }
+    std::vector<uint8_t> &GetData() { return data_; }
 
 private:
     uint16_t id_;
