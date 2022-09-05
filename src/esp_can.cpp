@@ -1,13 +1,34 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp_can.h"
+#include <ESP32CAN.h>
+#include <CAN_config.h>
 
 CAN_device_t CAN_cfg; // CAN Config
 
-void ESPCAN::Initialize(CAN_speed_t baud, gpio_num_t tx, gpio_num_t rx)
+ESPCAN::ESPCAN(gpio_num_t tx, gpio_num_t rx)
 {
-    CAN_cfg.speed = baud;
     CAN_cfg.tx_pin_id = tx;
     CAN_cfg.rx_pin_id = rx;
+}
+
+void ESPCAN::Initialize(BaudRate baud)
+{
+    switch (baud)
+    {
+    case BaudRate::kBaud125k:
+        CAN_cfg.speed = CAN_speed_t::CAN_SPEED_125KBPS;
+        break;
+    case BaudRate::kBaud250K:
+        CAN_cfg.speed = CAN_speed_t::CAN_SPEED_250KBPS;
+        break;
+    case BaudRate::kBaud500K:
+        CAN_cfg.speed = CAN_speed_t::CAN_SPEED_500KBPS;
+        break;
+    case BaudRate::kBaud1M:
+        CAN_cfg.speed = CAN_speed_t::CAN_SPEED_1000KBPS;
+        break;
+    }
+
     const int rx_queue_size{10};
     CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
     // Init CAN Module

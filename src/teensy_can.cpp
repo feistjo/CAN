@@ -1,13 +1,15 @@
 #if defined(ARDUINO_TEENSY40) || defined(ARDUINO_TEENSY41)
 #include "teensy_can.h"
 
-void TeensyCAN::Initialize(BaudRate baud)
+template <uint8_t bus_num>
+void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 {
-    CANBus1.begin();
-    CANBus1.setBaudRate(static_cast<uint32_t>(baud));
+    can_bus_.begin();
+    can_bus_.setBaudRate(static_cast<uint32_t>(baud));
 }
 
-bool TeensyCAN::SendMessage(CANMessage &msg)
+template <uint8_t bus_num>
+bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
     CAN_message_t tx_msg;
 
@@ -20,16 +22,17 @@ bool TeensyCAN::SendMessage(CANMessage &msg)
         tx_msg.buf[i] = msg.GetData()[i];
     }
 
-    CANBus1.write(tx_msg);
+    can_bus_.write(tx_msg);
 
     return true;
 }
 
-bool TeensyCAN::ReceiveMessage(CANMessage &msg)
+template <uint8_t bus_num>
+bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
 {
     CAN_message_t temp_rx_msg;
 
-    if (CANBus1.read(temp_rx_msg))
+    if (can_bus_.read(temp_rx_msg))
     {
         msg.SetID(temp_rx_msg.id);
         msg.SetLen(temp_rx_msg.len);
