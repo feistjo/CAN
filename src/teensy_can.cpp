@@ -6,6 +6,7 @@ void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 {
     can_bus_.begin();
     can_bus_.setBaudRate(static_cast<uint32_t>(baud));
+    can_bus_.onReceive(ProcessMessage);
 }
 
 template <uint8_t bus_num>
@@ -18,7 +19,6 @@ bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 
     for (int i = 0; i < msg.GetLen(); i++)
     {
-
         tx_msg.buf[i] = msg.GetData()[i];
     }
 
@@ -39,7 +39,6 @@ bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
 
         for (int i = 0; i < msg.GetLen(); i++)
         {
-
             msg.GetData()[i] = temp_rx_msg.buf[i];
         }
     }

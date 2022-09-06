@@ -24,23 +24,6 @@ private:
     std::array<uint8_t, 8> data_;
 };
 
-class ICAN
-{
-public:
-    enum class BaudRate
-    {
-        kBaud1M = 1000000,
-        kBaud500K = 500000,
-        kBaud250K = 250000,
-        kBaud125k = 125000
-    };
-
-    virtual void Initialize(BaudRate baud);
-
-    virtual bool SendMessage(CANMessage &msg) = 0;
-    virtual bool ReceiveMessage(CANMessage &msg) = 0;
-};
-
 class ICANSignal
 {
 public:
@@ -119,15 +102,49 @@ private:
     SignalType signal_;
 };
 
+class ICANTXMessage
+{
+public:
+    virtual void Tick(std::chrono::milliseconds elapsed_time) = 0;
+    virtual uint16_t GetID() = 0;
+    virtual void EncodeSignals() = 0;
+};
+
+class ICANRXMessage
+{
+public:
+    virtual uint16_t GetID() = 0;
+    virtual void DecodeSignals(CANMessage message) = 0;
+};
+
+class ICAN
+{
+public:
+    enum class BaudRate
+    {
+        kBaud1M = 1000000,
+        kBaud500K = 500000,
+        kBaud250K = 250000,
+        kBaud125k = 125000
+    };
+
+    virtual void Initialize(BaudRate baud);
+
+    virtual bool SendMessage(CANMessage &msg) = 0;
+    virtual bool ReceiveMessage(CANMessage &msg) = 0;
+
+    virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
+};
+
 /**
  * @brief A class for storing signals in a message that sends every period
  */
 template <size_t num_signals>
-class CANTXMessage
+class CANTXMessage : public ICANTXMessage
 {
 public:
     template <typename... Ts>
-    CANTXMessage(ICAN &can_interface, uint8_t id, uint8_t length, std::chrono::milliseconds period, Ts &...signals)
+    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, std::chrono::milliseconds period, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
           period_{period},
@@ -144,11 +161,13 @@ public:
         }
     }
 
+    uint16_t GetID() { return message_.GetID(); }
+
     void EncodeSignals()
     {
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i].EncodeSignal(static_cast<uint64_t *>(message_.GetData()));
+            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(message_.GetData().data()));
         }
     }
 
@@ -159,5 +178,36 @@ private:
     std::array<ICANSignal *, num_signals> signals_;
 
     std::chrono::milliseconds timer_{period_};
+    uint64_t raw_message;
+};
+
+/**
+ * @brief A class for storing signals that get updated every time a matching message is received
+ */
+template <size_t num_signals>
+class CANRXMessage
+{
+public:
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface, uint8_t id, Ts &...signals)
+        : can_interface_{can_interface}, id_{id}, signals_{&signals...}
+    {
+    }
+
+    uint16_t GetID() { return id_; }
+
+    void DecodeSignals(CANMessage message)
+    {
+        for (uint8_t i = 0; i < num_signals; i++)
+        {
+            signals_[i]->DecodeSignal(reinterpret_cast<uint64_t *>(message.GetData().data()));
+        }
+    }
+
+private:
+    ICAN &can_interface_;
+    uint32_t id_;
+    std::array<ICANSignal *, num_signals> signals_;
+
     uint64_t raw_message;
 };
