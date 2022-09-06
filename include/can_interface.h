@@ -157,6 +157,7 @@ public:
         timer_ -= elapsed_time;
         if (timer_ <= std::chrono::milliseconds(0))
         {
+            timer_ = period_;
             EncodeSignals();
         }
     }
