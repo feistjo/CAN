@@ -111,6 +111,7 @@ void loop()
             unsigned long tx_timeout_timer = millis();
 
             can_interface.SendMessage(tx_msg);
+            test_tx_message.Tick(std::chrono::milliseconds(100));
 
             if (tx_timeout_duration + tx_timeout_timer <= millis())
             {
