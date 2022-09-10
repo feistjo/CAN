@@ -33,7 +33,7 @@ public:
 
 constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
 {
-    return 0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position));
+    return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
 }
 static constexpr int kCANTemplateFloatDenominator{10000};
 constexpr int CANTemplateConvertFloat(float value) { return value * kCANTemplateFloatDenominator; }
@@ -68,13 +68,13 @@ public:
     {
         if (unity_factor)
         {
-            *buffer |= (static_cast<uint64_t>(signal_) >> position) & mask;
+            *buffer |= (static_cast<uint64_t>(signal_) << position) & mask;
         }
         else
         {
             *buffer |=
                 (static_cast<uint64_t>(((signal_ / CANTemplateConvertFloat(factor)) + CANTemplateConvertFloat(offset)))
-                 >> position)
+                 << position)
                 & mask;
         }
     }
@@ -83,11 +83,11 @@ public:
     {
         if (unity_factor)
         {
-            signal_ = static_cast<SignalType>((*buffer & mask) << position);
+            signal_ = static_cast<SignalType>((*buffer & mask) >> position);
         }
         else
         {
-            signal_ = static_cast<SignalType>((((*buffer & mask) << position) * CANTemplateConvertFloat(factor))
+            signal_ = static_cast<SignalType>((((*buffer & mask) >> position) * CANTemplateConvertFloat(factor))
                                               + CANTemplateConvertFloat(offset));
         }
     }
@@ -97,6 +97,9 @@ public:
     void operator=(const SignalType &signal) { signal_ = signal; }
 
     operator SignalType() const { return signal_; }
+
+    // test
+    uint64_t GetMask() { return mask; }
 
 private:
     SignalType signal_;
