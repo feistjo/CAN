@@ -98,9 +98,6 @@ public:
 
     operator SignalType() const { return signal_; }
 
-    // test
-    uint64_t GetMask() { return mask; }
-
 private:
     SignalType signal_;
 };
