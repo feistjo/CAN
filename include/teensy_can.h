@@ -28,19 +28,7 @@ private:
     FlexCAN_T4<bus_num == 2 ? CAN2 : bus_num == 3 ? CAN3 : CAN1, RX_SIZE_256, TX_SIZE_16> can_bus_;
     static std::vector<ICANRXMessage *> rx_messages_;
 
-    _MB_ptr ProcessMessage = [](const CAN_message_t &msg)
-    {
-        std::array<uint8_t, 8> msg_data{};
-        memcpy(msg_data.data(), msg.buf, 8);
-        CANMessage received_message{static_cast<uint16_t>(msg.id), msg.len, msg_data};
-        for (size_t i = 0; i < rx_messages_.size(); i++)
-        {
-            if (rx_messages_[i]->GetID() == received_message.GetID())
-            {
-                rx_messages_[i]->DecodeSignals(received_message);
-            }
-        }
-    };
+    static _MB_ptr ProcessMessage;
 };
 template <uint8_t bus_num>
 std::vector<ICANRXMessage *> TeensyCAN<bus_num>::rx_messages_{};

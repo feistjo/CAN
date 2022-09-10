@@ -45,4 +45,19 @@ bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
 
     return true;
 }
+
+template <uint8_t bus_num>
+_MB_ptr TeensyCAN<bus_num>::ProcessMessage = [](const CAN_message_t &msg)
+{
+    std::array<uint8_t, 8> msg_data{};
+    memcpy(msg_data.data(), msg.buf, 8);
+    CANMessage received_message{static_cast<uint16_t>(msg.id), msg.len, msg_data};
+    for (size_t i = 0; i < rx_messages_.size(); i++)
+    {
+        if (rx_messages_[i]->GetID() == received_message.GetID())
+        {
+            rx_messages_[i]->DecodeSignals(received_message);
+        }
+    }
+};
 #endif
