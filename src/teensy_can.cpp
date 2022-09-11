@@ -12,17 +12,15 @@ void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 template <uint8_t bus_num>
 bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
-    CAN_message_t tx_msg;
+    message_t.id = msg.GetID();
+    message_t.len = msg.GetLen();
 
-    tx_msg.id = msg.GetID();
-    tx_msg.len = msg.GetLen();
-
-    for (int i = 0; i < msg.GetLen(); i++)
+    for (int i = 0; i < 8; i++)
     {
-        tx_msg.buf[i] = msg.GetData()[i];
+        message_t.buf[i] = msg.GetData()[i];
     }
 
-    can_bus_.write(tx_msg);
+    can_bus_.write(message_t);
 
     return true;
 }
@@ -30,16 +28,14 @@ bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 template <uint8_t bus_num>
 bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
 {
-    CAN_message_t temp_rx_msg;
-
-    if (can_bus_.read(temp_rx_msg))
+    if (can_bus_.read(message_t))
     {
-        msg.SetID(temp_rx_msg.id);
-        msg.SetLen(temp_rx_msg.len);
+        msg.SetID(message_t.id);
+        msg.SetLen(message_t.len);
 
         for (int i = 0; i < msg.GetLen(); i++)
         {
-            msg.GetData()[i] = temp_rx_msg.buf[i];
+            msg.GetData()[i] = message_t.buf[i];
         }
     }
 
