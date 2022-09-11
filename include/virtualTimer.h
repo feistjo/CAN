@@ -32,7 +32,6 @@ typedef struct virtualTimer_S
 	unsigned long prevTick = 0U;
 	unsigned long duration = 100U;
 
-	virtualTimer_S* prevTimer = NULL;
 	virtualTimer_S* nextTimer = NULL;
 
 	void (*func)(void) = NULL;
@@ -94,17 +93,31 @@ typedef struct virtualTimer_S
 	}
 
 	/**
+	 * 
 	 * @brief Initialize the duration, prevTick, and function pointers for this timer 
 	 * 
 	 * @param durationInput = duration between function calls 
 	 * @param runFunc = function to be called when ticked
+	 * @return true = timer initialized successfully 
+	 * @return false = timer failed to initialize, passed function pointer was NULL
 	 */
-	void init (unsigned long durationInput, void (*runFunc)(void))
+	bool init (unsigned long durationInput, void (*runFunc)(void))
 	{
-		duration = durationInput;
-		func = runFunc;
-		timerState = TIMER_RUNNING;
-		prevTick = millis();
+		bool ret = true;
+		if (runFunc == NULL)
+		{
+			ret = false;
+		}
+		else
+		{
+			duration = durationInput;
+			func = runFunc;
+			timerState = TIMER_RUNNING;
+			prevTick = millis();
+		}
+
+		return ret;
+		
 	}
 
 	/**
@@ -146,7 +159,6 @@ typedef struct virtualTimer_S
 typedef struct 
 {
 	virtualTimer_S* headNode = NULL;
-	virtualTimer_S* tailNode = NULL;
 	unsigned long minTimerDuration;
 
 	virtualTimer_S timerArr[MAX_TIMERS];
@@ -162,19 +174,12 @@ typedef struct
 		if (headNode == NULL)
 		{
 			headNode = newTimer;
-			tailNode = newTimer;
-			newTimer->prevTimer = newTimer;
-			newTimer->nextTimer = newTimer;
 			minTimerDuration = newTimer->duration;
 		}
 		else
 		{
-			newTimer->prevTimer = tailNode;
 			newTimer->nextTimer = headNode;
-
-			headNode->prevTimer = newTimer;
-			tailNode->nextTimer = newTimer;
-			tailNode = newTimer;
+			headNode = newTimer;
 
 			if (newTimer->duration < minTimerDuration)
 			{
@@ -201,9 +206,6 @@ typedef struct
 				timerArr[0].init(duration, runFunc);
 				
 				headNode = &timerArr[0];
-				tailNode = &timerArr[0];
-				timerArr[0].prevTimer = &timerArr[0];
-				timerArr[0].nextTimer = &timerArr[0];
 				minTimerDuration = duration;
 
 				arrPos++;
@@ -212,12 +214,8 @@ typedef struct
 			{
 				timerArr[arrPos].init(duration, runFunc);
 				
-				timerArr[arrPos].prevTimer = tailNode;
 				timerArr[arrPos].nextTimer = headNode;
-
-				headNode->prevTimer = &timerArr[arrPos];
-				tailNode->nextTimer = &timerArr[arrPos];
-				tailNode = &timerArr[arrPos];
+				headNode = &timerArr[arrPos];
 
 				if (duration < minTimerDuration)
 				{
@@ -249,7 +247,7 @@ typedef struct
 		{
 			virtualTimer_S* tempTimer = headNode;
 			unsigned long tempTaskDuration;
-			do
+			while (tempTimer != NULL)
 			{
 				tempTaskDuration = millis();
 				tempTimer->tick();
@@ -261,7 +259,7 @@ typedef struct
 				}
 
 				tempTimer = tempTimer->nextTimer;
-			} while (tempTimer != headNode);
+			}
 		}
 
 		return ret;
