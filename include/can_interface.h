@@ -186,14 +186,14 @@ private:
  * @brief A class for storing signals that get updated every time a matching message is received
  */
 template <size_t num_signals>
-class CANRXMessage
+class CANRXMessage : public ICANRXMessage
 {
 public:
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface, uint8_t id, Ts &...signals)
         : can_interface_{can_interface}, id_{id}, signals_{&signals...}
     {
-        can_interface_.RegisterRXMessage(this);
+        can_interface_.RegisterRXMessage(*this);
     }
 
     uint16_t GetID() { return id_; }
