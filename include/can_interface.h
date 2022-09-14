@@ -193,6 +193,7 @@ public:
     CANRXMessage(ICAN &can_interface, uint8_t id, Ts &...signals)
         : can_interface_{can_interface}, id_{id}, signals_{&signals...}
     {
+        can_interface_.RegisterRXMessage(this);
     }
 
     uint16_t GetID() { return id_; }
