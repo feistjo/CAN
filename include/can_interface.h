@@ -190,7 +190,7 @@ class CANRXMessage : public ICANRXMessage
 {
 public:
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint8_t id, Ts &...signals)
+    CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
         : can_interface_{can_interface}, id_{id}, signals_{&signals...}
     {
         can_interface_.RegisterRXMessage(*this);
@@ -208,7 +208,7 @@ public:
 
 private:
     ICAN &can_interface_;
-    uint32_t id_;
+    uint16_t id_;
     std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
