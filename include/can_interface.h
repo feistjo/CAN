@@ -159,18 +159,11 @@ public:
         {
             timer_ = period_;
             EncodeSignals();
+            can_interface_.SendMessage(message_);
         }
     }
 
     uint16_t GetID() { return message_.GetID(); }
-
-    void EncodeSignals()
-    {
-        for (uint8_t i = 0; i < num_signals; i++)
-        {
-            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(message_.GetData().data()));
-        }
-    }
 
 private:
     ICAN &can_interface_;
@@ -179,7 +172,14 @@ private:
     std::array<ICANSignal *, num_signals> signals_;
 
     std::chrono::milliseconds timer_{period_};
-    uint64_t raw_message;
+
+    void EncodeSignals()
+    {
+        for (uint8_t i = 0; i < num_signals; i++)
+        {
+            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(message_.GetData().data()));
+        }
+    }
 };
 
 /**
