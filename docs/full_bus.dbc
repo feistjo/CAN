@@ -62,4 +62,11 @@ BO_ 1040 Brake_Pressure: 4 Vector__XXX
 
 
 
+BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
+BA_DEF_DEF_  "GenMsgCycleTime" 0;
+BA_ "GenMsgCycleTime" BO_ 1024 100;
+BA_ "GenMsgCycleTime" BO_ 1025 100;
+BA_ "GenMsgCycleTime" BO_ 1026 100;
+BA_ "GenMsgCycleTime" BO_ 1027 100;
+BA_ "GenMsgCycleTime" BO_ 1040 100;
 
