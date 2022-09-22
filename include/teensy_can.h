@@ -24,6 +24,8 @@ public:
 
     void RegisterRXMessage(ICANRXMessage &msg) override { rx_messages_.push_back(&msg); }
 
+    void Tick() override { can_bus_.events(); }
+
 private:
     FlexCAN_T4<bus_num == 2 ? CAN2 : bus_num == 3 ? CAN3 : CAN1, RX_SIZE_256, TX_SIZE_16> can_bus_;
     static std::vector<ICANRXMessage *> rx_messages_;

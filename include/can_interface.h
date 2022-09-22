@@ -134,6 +134,8 @@ public:
     virtual bool ReceiveMessage(CANMessage &msg) = 0;
 
     virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
+
+    virtual void Tick() = 0;
 };
 
 /**
