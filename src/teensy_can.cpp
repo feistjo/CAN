@@ -2,6 +2,13 @@
 #include "teensy_can.h"
 
 template <uint8_t bus_num>
+std::vector<ICANRXMessage *> TeensyCAN<bus_num>::rx_messages_{};
+
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_bus_1;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_bus_2;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> can_bus_3;
+
+template <uint8_t bus_num>
 void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 {
     can_bus_.begin();
@@ -12,15 +19,16 @@ void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 template <uint8_t bus_num>
 bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
-    message_t.id = msg.GetID();
-    message_t.len = msg.GetLen();
+    CAN_message_t msg_t;
+    msg_t.id = static_cast<uint32_t>(0);  // msg.GetID();
+    msg_t.len = 8;                        // msg.GetLen();
 
     for (int i = 0; i < 8; i++)
     {
-        message_t.buf[i] = msg.GetData()[i];
+        msg_t.buf[i] = msg.GetData()[i];
     }
 
-    can_bus_.write(message_t);
+    can_bus_.write(msg_t);
 
     return true;
 }

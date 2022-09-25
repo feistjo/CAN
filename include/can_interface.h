@@ -177,10 +177,12 @@ private:
 
     void EncodeSignals()
     {
+        uint64_t temp_raw{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(message_.GetData().data()));
+            signals_[i]->EncodeSignal(&temp_raw);
         }
+        *reinterpret_cast<uint64_t *>(message_.GetData().data()) = temp_raw;
     }
 };
 
@@ -202,9 +204,10 @@ public:
 
     void DecodeSignals(CANMessage message)
     {
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.GetData().data());
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->DecodeSignal(reinterpret_cast<uint64_t *>(message.GetData().data()));
+            signals_[i]->DecodeSignal(&temp_raw);
         }
     }
 

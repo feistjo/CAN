@@ -33,8 +33,6 @@ private:
 
     static _MB_ptr ProcessMessage;
 };
-template <uint8_t bus_num>
-std::vector<ICANRXMessage *> TeensyCAN<bus_num>::rx_messages_{};
 
 template class TeensyCAN<1>;
 template class TeensyCAN<2>;
