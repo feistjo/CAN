@@ -6,7 +6,6 @@
 #include <chrono>
 #include <vector>
 
-// TODO: make CANSignals instead of data, add CANSignal encode() and decode() to set message data
 class CANMessage
 {
 public:
