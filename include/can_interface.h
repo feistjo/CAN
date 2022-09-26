@@ -151,6 +151,7 @@ public:
           period_{period},
           signals_{&signals...}
     {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
     }
 
     void Tick(std::chrono::milliseconds elapsed_time)
@@ -196,6 +197,7 @@ public:
     CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
         : can_interface_{can_interface}, id_{id}, signals_{&signals...}
     {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
         can_interface_.RegisterRXMessage(*this);
     }
 
