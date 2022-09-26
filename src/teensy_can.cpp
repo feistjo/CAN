@@ -11,42 +11,84 @@ FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> can_bus_3;
 template <uint8_t bus_num>
 void TeensyCAN<bus_num>::Initialize(BaudRate baud)
 {
-    can_bus_.begin();
-    can_bus_.setBaudRate(static_cast<uint32_t>(baud));
-    can_bus_.onReceive(ProcessMessage);
+    // Repeated code due to limitations of C++11, look into alternatives without repeated code
+    if (bus_num == 2)
+    {
+        can_bus_2.begin();
+        can_bus_2.setBaudRate(static_cast<uint32_t>(baud));
+        can_bus_2.enableFIFO();
+        can_bus_2.enableFIFOInterrupt();
+        can_bus_2.onReceive(ProcessMessage);
+    }
+    else if (bus_num == 3)
+    {
+        can_bus_3.begin();
+        can_bus_3.setBaudRate(static_cast<uint32_t>(baud));
+        can_bus_3.enableFIFO();
+        can_bus_3.enableFIFOInterrupt();
+        can_bus_3.onReceive(ProcessMessage);
+    }
+    else
+    {
+        can_bus_1.begin();
+        can_bus_1.setBaudRate(static_cast<uint32_t>(baud));
+        can_bus_1.enableFIFO();
+        can_bus_1.enableFIFOInterrupt();
+        can_bus_1.onReceive(ProcessMessage);
+    }
+}
+
+template <uint8_t bus_num>
+void TeensyCAN<bus_num>::Tick()
+{
+    // Repeated code due to limitations of C++11, look into alternatives without repeated code
+    if (bus_num == 2)
+    {
+        can_bus_2.events();
+    }
+    else if (bus_num == 3)
+    {
+        can_bus_3.events();
+    }
+    else
+    {
+        can_bus_1.events();
+    }
 }
 
 template <uint8_t bus_num>
 bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
     CAN_message_t msg_t;
-    msg_t.id = static_cast<uint32_t>(0);  // msg.GetID();
-    msg_t.len = 8;                        // msg.GetLen();
+    msg_t.id = msg.GetID();
+    msg_t.len = msg.GetLen();
 
     for (int i = 0; i < 8; i++)
     {
         msg_t.buf[i] = msg.GetData()[i];
     }
 
-    can_bus_.write(msg_t);
+    // Repeated code due to limitations of C++11, look into alternatives without repeated code
+    if (bus_num == 2)
+    {
+        can_bus_2.write(msg_t);
+    }
+    else if (bus_num == 3)
+    {
+        can_bus_3.write(msg_t);
+    }
+    else
+    {
+        can_bus_1.write(msg_t);
+    }
 
     return true;
 }
 
 template <uint8_t bus_num>
+// Temporarily stubbed to maintain compatibility with ESP polling
 bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
 {
-    if (can_bus_.read(message_t))
-    {
-        msg.SetID(message_t.id);
-        msg.SetLen(message_t.len);
-
-        for (int i = 0; i < msg.GetLen(); i++)
-        {
-            msg.GetData()[i] = message_t.buf[i];
-        }
-    }
-
     return true;
 }
 

@@ -72,10 +72,9 @@ public:
         }
         else
         {
-            *buffer |=
-                (static_cast<uint64_t>(((signal_ / CANTemplateConvertFloat(factor)) + CANTemplateConvertFloat(offset)))
-                 << position)
-                & mask;
+            *buffer |= (static_cast<uint64_t>(((signal_ / CANTemplateGetFloat(factor)) + CANTemplateGetFloat(offset)))
+                        << position)
+                       & mask;
         }
     }
 
@@ -87,8 +86,8 @@ public:
         }
         else
         {
-            signal_ = static_cast<SignalType>((((*buffer & mask) >> position) * CANTemplateConvertFloat(factor))
-                                              + CANTemplateConvertFloat(offset));
+            signal_ = static_cast<SignalType>((((*buffer & mask) >> position) * CANTemplateGetFloat(factor))
+                                              + CANTemplateGetFloat(offset));
         }
     }
 
