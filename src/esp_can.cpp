@@ -1,10 +1,15 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp_can.h"
 
+#include <Arduino.h>
 #include <CAN_config.h>
 #include <ESP32CAN.h>
 
+#include <cstring>
+
 CAN_device_t CAN_cfg;  // CAN Config
+
+std::vector<ICANRXMessage *> ESPCAN::rx_messages_{};
 
 ESPCAN::ESPCAN(gpio_num_t tx, gpio_num_t rx)
 {
@@ -32,8 +37,8 @@ void ESPCAN::Initialize(BaudRate baud)
 
     const int rx_queue_size{10};
     CAN_cfg.rx_queue = xQueueCreate(rx_queue_size, sizeof(CAN_frame_t));
-    CAN_cfg.rx_handle = xTaskCreate(&ProcessReceive, "Process CAN Receive", 200, NULL, 5, NULL);
-    // Init CAN Module
+    // CAN_cfg.rx_handle = xTaskCreate(&ProcessReceive, "Process CAN Receive", 200, NULL, 5, NULL);
+    //  Init CAN Module
     ESP32Can.CANInit();
 }
 
@@ -74,4 +79,29 @@ bool ESPCAN::ReceiveMessage(CANMessage &msg)
 
     return true;
 }
+
+void ESPCAN::Tick()
+{
+    std::array<uint8_t, 8> msg_data{};
+    CANMessage received_message{0, 8, msg_data};
+    CAN_frame_t rx_frame;
+
+    while ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE)
+           && (rx_frame.FIR.B.FF == CAN_frame_std))
+    {
+        received_message.SetID(rx_frame.MsgID);
+        received_message.SetLen(rx_frame.FIR.B.DLC);
+
+        memcpy(received_message.GetData().data(), rx_frame.data.u8, 8);
+
+        for (size_t i = 0; i < rx_messages_.size(); i++)
+        {
+            if (rx_messages_[i]->GetID() == received_message.GetID())
+            {
+                rx_messages_[i]->DecodeSignals(received_message);
+            }
+        }
+    }
+}
+
 #endif

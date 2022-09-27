@@ -20,7 +20,9 @@ public:
     bool SendMessage(CANMessage &msg) override;
     bool ReceiveMessage(CANMessage &msg) override;
 
-    void RegisterRXMessage(ICANRXMessage &msg);
+    void RegisterRXMessage(ICANRXMessage &msg) override { rx_messages_.push_back(&msg); }
+
+    void Tick() override;
 
     static void ProcessReceive(void *pvParameter)
     {
