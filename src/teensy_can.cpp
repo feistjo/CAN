@@ -86,13 +86,6 @@ bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 }
 
 template <uint8_t bus_num>
-// Temporarily stubbed to maintain compatibility with ESP polling
-bool TeensyCAN<bus_num>::ReceiveMessage(CANMessage &msg)
-{
-    return true;
-}
-
-template <uint8_t bus_num>
 _MB_ptr TeensyCAN<bus_num>::ProcessMessage = [](const CAN_message_t &msg)
 {
     std::array<uint8_t, 8> msg_data{};

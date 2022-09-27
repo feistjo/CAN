@@ -129,7 +129,6 @@ public:
     virtual void Initialize(BaudRate baud);
 
     virtual bool SendMessage(CANMessage &msg) = 0;
-    virtual bool ReceiveMessage(CANMessage &msg) = 0;
 
     virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
 

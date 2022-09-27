@@ -60,25 +60,6 @@ bool ESPCAN::SendMessage(CANMessage &msg)
     return ret;
 }
 
-bool ESPCAN::ReceiveMessage(CANMessage &msg)
-{
-    CAN_frame_t rx_frame;
-
-    if ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE)
-        && (rx_frame.FIR.B.FF == CAN_frame_std))
-    {
-        msg.SetID(rx_frame.MsgID);
-        msg.SetLen(rx_frame.FIR.B.DLC);
-
-        for (int i = 0; i < msg.GetLen(); i++)
-        {
-            msg.GetData()[i] = rx_frame.data.u8[i];
-        }
-    }
-
-    return true;
-}
-
 void ESPCAN::Tick()
 {
     std::array<uint8_t, 8> msg_data{};
