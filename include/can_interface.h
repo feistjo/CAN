@@ -112,7 +112,7 @@ class ICANRXMessage
 {
 public:
     virtual uint16_t GetID() = 0;
-    virtual void DecodeSignals(CANMessage &message) = 0;
+    virtual void DecodeSignals(CANMessage message) = 0;
 };
 
 class ICAN
@@ -201,7 +201,7 @@ public:
 
     uint16_t GetID() { return id_; }
 
-    void DecodeSignals(CANMessage &message)
+    void DecodeSignals(CANMessage message)
     {
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.GetData().data());
         for (uint8_t i = 0; i < num_signals; i++)
