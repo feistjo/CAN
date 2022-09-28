@@ -6,7 +6,6 @@
 #include <chrono>
 #include <vector>
 
-// TODO: make CANSignals instead of data, add CANSignal encode() and decode() to set message data
 class CANMessage
 {
 public:
@@ -130,7 +129,6 @@ public:
     virtual void Initialize(BaudRate baud);
 
     virtual bool SendMessage(CANMessage &msg) = 0;
-    virtual bool ReceiveMessage(CANMessage &msg) = 0;
 
     virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
 

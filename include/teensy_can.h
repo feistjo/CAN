@@ -20,7 +20,6 @@ public:
     void Initialize(BaudRate baud) override;
 
     bool SendMessage(CANMessage &msg) override;
-    bool ReceiveMessage(CANMessage &msg) override;
 
     void RegisterRXMessage(ICANRXMessage &msg) override { rx_messages_.push_back(&msg); }
 
