@@ -16,255 +16,62 @@
 #ifndef VIRTUALTIMERS_H
 #define VIRTUALTIMERS_H
 
-#include <Arduino.h>
+#include <stdint.h>
+#include <vector>
 
-#define MAX_TIMERS 16
-
-typedef enum
+class VirtualTimer
 {
-	TIMER_NOT_STARTED,
-	TIMER_RUNNING,
-	TIMER_EXPIRED,
-}virtualTimer_state_E;
+	public:
+		/********** ENUMS **********/
+		enum class State
+		{
+			kNotStarted,
+			kRunning,
+			kExpired,
+		};
 
-typedef struct virtualTimer_S
+		enum class Type
+		{
+			kSingleUse,
+			kRepeating,
+			kUninitialized,
+		};
+
+		/********** PROTOTYPES **********/
+		VirtualTimer ();
+		VirtualTimer (uint32_t duration_ms, void (*task_func)(void), Type timer_type);
+		void init (uint32_t duration_ms, void (*task_func)(void), Type timer_type);
+		void start (uint32_t current_time);
+		State getTimerState ();
+		bool hasTimerExpired (uint32_t current_time);
+		uint32_t getElapsedTime (uint32_t current_time);
+		bool tick (uint32_t current_time);
+
+		/********** VARIABLES **********/
+		uint32_t duration;
+
+	private: 
+		uint32_t prev_tick = 0U;
+
+		void (*task_func)(void) = NULL;
+
+		State state = State::kNotStarted;
+		Type type;
+};
+
+class VirtualTimerGroup
 {
-	unsigned long prevTick = 0U;
-	unsigned long duration = 100U;
+	public:
+		/********** PROTOTYPES **********/
+		VirtualTimerGroup ();
+		void addTimer (VirtualTimer* new_timer);
+		void addTimer (uint32_t duration_ms, void(*task_func)(void));
+		bool tick (uint32_t current_time);
 
-	virtualTimer_S* nextTimer = NULL;
-
-	void (*func)(void) = NULL;
-
-	virtualTimer_state_E timerState = TIMER_NOT_STARTED;
-
-	/**
-	 * @brief Start a timer without a function using the given duration
-	 * 
-	 * @param durationInput = duration until timer expires
-	 */
-	void start (unsigned long durationInput)
-	{
-		duration = durationInput;
-		timerState = TIMER_RUNNING;
-		prevTick = millis();
-	}
-
-	/**
-	 * @brief Get the current state of the timer
-	 * 
-	 * @return Current state of the timer
-	 */
-	virtualTimer_state_E getTimerState()
-	{
-		if (millis() >= prevTick + duration)
-		{
-			timerState = TIMER_EXPIRED;
-		}
-
-		return timerState;
-	}
-
-	/**
-	 * @brief Check if the timer has expired and update timerState if so 
-	 * 
-	 * @return true = timer has exceeded duration 
-	 * @return false = timer has not exceeded duration 
-	 */
-	bool hasTimerExpired()
-	{
-		bool ret = false;
-		if (getTimerState() == TIMER_EXPIRED)
-		{
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * @brief Get the time (in ms) that has elapsed since the timer was started
-	 * 
-	 * @return Elapsed time since timer was started
-	 */
-	unsigned long getElapsedTime()
-	{
-		unsigned long ret = millis() - prevTick;
-		return ret;
-	}
-
-	/**
-	 * 
-	 * @brief Initialize the duration, prevTick, and function pointers for this timer 
-	 * 
-	 * @param durationInput = duration between function calls 
-	 * @param runFunc = function to be called when ticked
-	 * @return true = timer initialized successfully 
-	 * @return false = timer failed to initialize, passed function pointer was NULL
-	 */
-	bool init (unsigned long durationInput, void (*runFunc)(void))
-	{
-		bool ret = true;
-		if (runFunc == NULL)
-		{
-			ret = false;
-		}
-		else
-		{
-			duration = durationInput;
-			func = runFunc;
-			timerState = TIMER_RUNNING;
-			prevTick = millis();
-		}
-
-		return ret;
-		
-	}
-
-	/**
-	 * @brief Run the fuction associated with this timer and update prevTick 
-	 * 
-	 * @return true if the function returned faster than the timer duration 
-	 * @return false if the function took longer to execute than the timer duration 
-	 * 			or the function pointer is NULL
-	 */
-	bool tick ()
-	{
-		bool ret = true;
-
-		if (func != NULL)
-		{
-			if (millis() >= prevTick + duration)
-			{
-				prevTick = millis();
-				timerState = TIMER_RUNNING;
-
-				func();
-
-				if (millis() >= prevTick + duration)
-				{
-					ret = false;
-				}
-			}
-		}
-		else 
-		{
-			ret = false;
-		}
-		
-		return ret;
-	}
-
-}virtualTimer_S;
-
-typedef struct 
-{
-	virtualTimer_S* headNode = NULL;
-	unsigned long minTimerDuration;
-
-	virtualTimer_S timerArr[MAX_TIMERS];
-	int arrPos = 0;
-
-	/**
-	 * @brief Add an existing timer to the timer group 
-	 * 
-	 * @param newTimer = existig timer to be added to the group
-	 */
-	void addTimer(virtualTimer_S* newTimer)
-	{
-		if (headNode == NULL)
-		{
-			headNode = newTimer;
-			minTimerDuration = newTimer->duration;
-		}
-		else
-		{
-			newTimer->nextTimer = headNode;
-			headNode = newTimer;
-
-			if (newTimer->duration < minTimerDuration)
-			{
-				minTimerDuration = newTimer->duration;
-			}
-		}
-	}
-
-	/**
-	 * @brief Create a new timer with the given duration and function and add it to the group 
-	 * 
-	 * @param duration = duration between function calls 
-	 * @param runFunc = function to be run when ticked 
-	 * @return true = timer was added successfully 
-	 * @return false = failed to add timer (likely reached the max number of timers)
-	 */
-	bool addTimer(unsigned long duration, void(*runFunc)(void))
-	{
-		bool ret = true;
-		if(arrPos < MAX_TIMERS)
-		{
-			if (headNode == NULL)
-			{
-				timerArr[0].init(duration, runFunc);
-				
-				headNode = &timerArr[0];
-				minTimerDuration = duration;
-
-				arrPos++;
-			}
-			else
-			{
-				timerArr[arrPos].init(duration, runFunc);
-				
-				timerArr[arrPos].nextTimer = headNode;
-				headNode = &timerArr[arrPos];
-
-				if (duration < minTimerDuration)
-				{
-					minTimerDuration = duration;
-				}
-
-				arrPos++;
-			}
-		}
-		else
-		{
-			ret = false;
-		}
-		return ret;
-	}
-
-	/**
-	 * @brief Tick all timers in group
-	 * 
-	 * @return true if all tasks ran faster than minimum timer duration 
-	 * @return false if one or more tasks took longer than the minimum timer duration 
-	 * 			(timers may no longer fire at the correct interval)
-	 */
-	bool tick()
-	{
-		bool ret = true;
-
-		if (headNode != NULL)
-		{
-			virtualTimer_S* tempTimer = headNode;
-			unsigned long tempTaskDuration;
-			while (tempTimer != NULL)
-			{
-				tempTaskDuration = millis();
-				tempTimer->tick();
-				tempTaskDuration = millis() - tempTaskDuration;
-
-				if (tempTaskDuration > minTimerDuration)
-				{
-					ret = false;
-				}
-
-				tempTimer = tempTimer->nextTimer;
-			}
-		}
-
-		return ret;
-	}
-
-}virtualTimerGroup_S;
+	private:
+		uint32_t prev_tick = 0U;
+		uint32_t min_timer_duration;
+		std::vector<VirtualTimer> timer_group;
+};
 
 #endif
