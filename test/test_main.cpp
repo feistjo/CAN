@@ -11,7 +11,7 @@ void tearDown(void)
     // clean stuff up here
 }
 
-void can_signal_test(void)
+void CanSignalTest(void)
 {
     CANSignal<uint8_t, 0, 8, CANTemplateConvertFloat(1), 0> test_signal;
     test_signal = 0;
@@ -44,7 +44,7 @@ void can_signal_test(void)
 int runUnityTests(void)
 {
     UNITY_BEGIN();
-    RUN_TEST(can_signal_test);
+    RUN_TEST(CanSignalTest);
     return UNITY_END();
 }
 
