@@ -1,9 +1,6 @@
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp_can.h"
 
-#include <CAN_config.h>
-#include <ESP32CAN.h>
-
 #include <cstring>
 
 CAN_device_t CAN_cfg;  // CAN Config
