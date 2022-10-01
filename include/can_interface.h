@@ -11,13 +11,6 @@ class CANMessage
 public:
     CANMessage(uint16_t id, uint8_t len, std::array<uint8_t, 8> data) : id_{id}, len_{len}, data_{data} {}
 
-    uint16_t GetID() const { return id_; }
-    void SetID(uint16_t id) { id_ = id; }
-    uint8_t GetLen() const { return len_; }
-    void SetLen(uint8_t len) { len_ = len; }
-    std::array<uint8_t, 8> &GetData() { return data_; }
-
-private:
     uint16_t id_;
     uint8_t len_;
     std::array<uint8_t, 8> data_;
@@ -30,6 +23,7 @@ public:
     virtual void DecodeSignal(uint64_t *buffer) = 0;
 };
 
+// Generates a mask of which bits in the message correspond to a specific signal
 constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
 {
     return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
@@ -57,7 +51,9 @@ template <typename SignalType,
           int offset,
           bool signed_raw = false,
           uint64_t mask = generate_mask(position, length),
-          bool unity_factor = factor == CANTemplateConvertFloat(1) && offset == 0>
+          bool unity_factor = factor == CANTemplateConvertFloat(1)
+                              && offset == 0>  // unity_factor is used for increased precision on unity-factor 64-bit
+                                               // signals by getting rid of floating point error
 class CANSignal : public ICANSignal
 {
 public:
@@ -163,7 +159,7 @@ public:
         }
     }
 
-    uint16_t GetID() { return message_.GetID(); }
+    uint16_t GetID() { return message_.id_; }
 
 private:
     ICAN &can_interface_;
@@ -180,7 +176,7 @@ private:
         {
             signals_[i]->EncodeSignal(&temp_raw);
         }
-        *reinterpret_cast<uint64_t *>(message_.GetData().data()) = temp_raw;
+        *reinterpret_cast<uint64_t *>(message_.data_.data()) = temp_raw;
     }
 };
 
@@ -203,7 +199,7 @@ public:
 
     void DecodeSignals(CANMessage message)
     {
-        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.GetData().data());
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
         for (uint8_t i = 0; i < num_signals; i++)
         {
             signals_[i]->DecodeSignal(&temp_raw);

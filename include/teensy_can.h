@@ -6,6 +6,12 @@
 
 #include "can_interface.h"
 
+#ifdef ARDUINO_TEENSY40
+#define MAX_BUS_NUM 2
+#elif defined(ARDUINO_TEENSY41)
+#define MAX_BUS_NUM 3
+#endif
+
 template <uint8_t bus_num = 1>
 class TeensyCAN : public ICAN
 {
@@ -15,7 +21,11 @@ public:
      *
      * @param bus_num A value from 1-3
      */
-    TeensyCAN() { static_assert(bus_num > 0 && bus_num < 4, "TeensyCAN only accepts a bus_num of 1-3"); }
+    TeensyCAN()
+    {
+        static_assert(bus_num > 0 && bus_num <= MAX_BUS_NUM,
+                      "TeensyCAN only accepts a bus_num of 1-3 (1-2 for Teensy 4.0)");
+    }
 
     void Initialize(BaudRate baud) override;
 

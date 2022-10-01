@@ -43,7 +43,7 @@ public:
             CANMessage received_message{static_cast<uint16_t>(msg_id), msg_len, msg_data};
             for (size_t i = 0; i < rx_messages_.size(); i++)
             {
-                if (rx_messages_[i]->GetID() == received_message.GetID())
+                if (rx_messages_[i]->GetID() == received_message.id_)
                 {
                     rx_messages_[i]->DecodeSignals(received_message);
                 }

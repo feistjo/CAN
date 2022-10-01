@@ -60,12 +60,12 @@ template <uint8_t bus_num>
 bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
     CAN_message_t msg_t;
-    msg_t.id = msg.GetID();
-    msg_t.len = msg.GetLen();
+    msg_t.id = msg.id_;
+    msg_t.len = msg.len_;
 
     for (int i = 0; i < 8; i++)
     {
-        msg_t.buf[i] = msg.GetData()[i];
+        msg_t.buf[i] = msg.data_[i];
     }
 
     // Repeated code due to limitations of C++11, look into alternatives without repeated code
@@ -93,7 +93,7 @@ _MB_ptr TeensyCAN<bus_num>::ProcessMessage = [](const CAN_message_t &msg)
     CANMessage received_message{static_cast<uint16_t>(msg.id), msg.len, msg_data};
     for (size_t i = 0; i < rx_messages_.size(); i++)
     {
-        if (rx_messages_[i]->GetID() == received_message.GetID())
+        if (rx_messages_[i]->GetID() == received_message.id_)
         {
             rx_messages_[i]->DecodeSignals(received_message);
         }
