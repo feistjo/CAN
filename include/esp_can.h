@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ESP32CAN.h>
+#include <ESP32CAN/ESP32CAN.h>
 
 #include "can_interface.h"
 

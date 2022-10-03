@@ -52,7 +52,7 @@ bool ESPCAN::SendMessage(CANMessage &msg)
         tx_frame.data.u8[i] = msg.data_[i];
     }
 
-    ret = (ESP32Can.CANWriteFrame(&tx_frame) != -1);
+    ret = (ESP32Can.CANWriteFrame(&tx_frame, TickType_t(10)) != -1);
 
     return ret;
 }
