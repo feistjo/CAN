@@ -44,4 +44,6 @@ private:
 
 template class TeensyCAN<1>;
 template class TeensyCAN<2>;
+#ifdef ARDUINO_TEENSY41
 template class TeensyCAN<3>;
+#endif
