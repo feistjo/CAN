@@ -33,40 +33,63 @@ NS_ :
 
 BS_:
 
-BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure
+BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board
 
 
-BO_ 1024 FL_Wheel: 6 FL_Wheel
+BO_ 1024 FL_Wheel: 4 FL_Wheel
  SG_ FL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ FL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
- SG_ FL_Suspension_Position : 32|16@1+ (1,0) [0|0] "mm" Vector__XXX
 
-BO_ 1025 FR_Wheel: 6 FR_Wheel
+BO_ 1025 FR_Wheel: 4 FR_Wheel
  SG_ FR_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ FR_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
- SG_ FR_Suspension_Position : 32|16@1+ (1,0) [0|0] "mm" Vector__XXX
 
-BO_ 1026 BL_Wheel: 6 BL_Wheel
+BO_ 1026 BL_Wheel: 4 BL_Wheel
  SG_ BL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ BL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
- SG_ BL_Suspension_Position : 32|16@1+ (1,0) [0|0] "mm" Vector__XXX
 
-BO_ 1027 BR_Wheel: 6 BR_Wheel
+BO_ 1027 BR_Wheel: 4 BR_Wheel
  SG_ BR_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ BR_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
- SG_ BR_Suspension_Position : 32|16@1+ (1,0) [0|0] "mm" Vector__XXX
 
 BO_ 1040 Brake_Pressure: 4 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
  SG_ Rear_Brake_Pressure : 16|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
+BO_ 1056 Ptrain_Temps: 4 Temp_Board
+ SG_ Motor_Temperature : 0|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
+ SG_ Coolant_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
+
+BO_ 1072 GPS: 8 Motion_Board
+ SG_ Latitude : 0|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
+ SG_ Longitude : 32|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
+
+BO_ 1073 Accelerometer: 8 Motion_Board
+ SG_ Accel_X : 0|16@1- (0.0005,0) [0|0] "G" Vector__XXX
+ SG_ Accel_Y : 16|16@1- (0.0005,0) [0|0] "G" Vector__XXX
+ SG_ Accel_Z : 32|16@1- (0.0005,0) [0|0] "G" Vector__XXX
+ SG_ Ambient_Temp : 48|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
+
+BO_ 1073 Gyroscope: 6 Motion_Board
+ SG_ Gyro_X : 0|16@1- (0.0005,0) [0|0] "rad/s" Vector__XXX
+ SG_ Gyro_Y : 16|16@1- (0.0005,0) [0|0] "rad/s" Vector__XXX
+ SG_ Gyro_Z : 32|16@1- (0.0005,0) [0|0] "rad/s" Vector__XXX
+
+BO_ 1088 RTC: 8 Logger_Board
+ SG_ RTC : 0|64@1+ (10,0) [0|0] "ms" Vector__XXX
+
 
 
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
 BA_DEF_DEF_  "GenMsgCycleTime" 0;
-BA_ "GenMsgCycleTime" BO_ 1024 100;
-BA_ "GenMsgCycleTime" BO_ 1025 100;
-BA_ "GenMsgCycleTime" BO_ 1026 100;
-BA_ "GenMsgCycleTime" BO_ 1027 100;
+BA_ "GenMsgCycleTime" BO_ 1024 10;
+BA_ "GenMsgCycleTime" BO_ 1025 10;
+BA_ "GenMsgCycleTime" BO_ 1026 10;
+BA_ "GenMsgCycleTime" BO_ 1027 10;
 BA_ "GenMsgCycleTime" BO_ 1040 100;
+BA_ "GenMsgCycleTime" BO_ 1056 100;
+BA_ "GenMsgCycleTime" BO_ 1072 100;
+BA_ "GenMsgCycleTime" BO_ 1073 10;
+BA_ "GenMsgCycleTime" BO_ 1073 10;
+BA_ "GenMsgCycleTime" BO_ 1088 10;
 
