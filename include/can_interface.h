@@ -144,7 +144,7 @@ public:
     CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, uint32_t start_time, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
-          transmit_timer_{period, EncodeAndSend, VirtualTimer::Type::kRepeating},
+          transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
