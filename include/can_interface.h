@@ -141,6 +141,16 @@ class CANTXMessage : public ICANTXMessage
 {
 public:
     template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param signals The ICANSignals contained in the message
+     */
     CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, uint32_t start_time, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
@@ -149,6 +159,30 @@ public:
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
         transmit_timer_.Start(start_time);
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 uint8_t length,
+                 uint32_t period,
+                 uint32_t start_time,
+                 VirtualTimerGroup timer_group,
+                 Ts &...signals)
+        : CANTXMessage(can_interface, id, length, period, start_time, &signals...)
+    {
+        timer_group.AddTimer(transmit_timer_);
     }
 
     void EncodeAndSend()
