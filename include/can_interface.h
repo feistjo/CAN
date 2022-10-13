@@ -6,6 +6,8 @@
 #include <chrono>
 #include <vector>
 
+#include "virtualTimer.h"
+
 class CANMessage
 {
 public:
@@ -99,8 +101,8 @@ private:
 class ICANTXMessage
 {
 public:
-    virtual void Tick(std::chrono::milliseconds elapsed_time) = 0;
     virtual uint16_t GetID() = 0;
+    virtual VirtualTimer &GetTransmitTimer() = 0;
     virtual void EncodeSignals() = 0;
 };
 
@@ -139,35 +141,31 @@ class CANTXMessage : public ICANTXMessage
 {
 public:
     template <typename... Ts>
-    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, std::chrono::milliseconds period, Ts &...signals)
+    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, uint32_t start_time, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
-          period_{period},
+          transmit_timer_{period, EncodeAndSend, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
+        transmit_timer_.Start(start_time);
     }
 
-    void Tick(std::chrono::milliseconds elapsed_time)
+    void EncodeAndSend()
     {
-        timer_ -= elapsed_time;
-        if (timer_ <= std::chrono::milliseconds(0))
-        {
-            timer_ = period_;
-            EncodeSignals();
-            can_interface_.SendMessage(message_);
-        }
+        EncodeSignals();
+        can_interface_.SendMessage(message_);
     }
 
     uint16_t GetID() { return message_.id_; }
 
+    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+
 private:
     ICAN &can_interface_;
     CANMessage message_;
-    std::chrono::milliseconds period_;
+    VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
-
-    std::chrono::milliseconds timer_{period_};
 
     void EncodeSignals()
     {
