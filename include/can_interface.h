@@ -246,12 +246,12 @@ private:
 
     void EncodeSignals()
     {
-        uint8_t *temp_raw[8]{0};
+        uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
             signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
-        std::copy(std::begin(temp_raw), std::end(temp_raw), std::begin(message_.data_));
+        std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
 };
 
