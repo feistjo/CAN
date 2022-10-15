@@ -180,7 +180,7 @@ public:
                  uint32_t start_time,
                  VirtualTimerGroup timer_group,
                  Ts &...signals)
-        : CANTXMessage(can_interface, id, length, period, start_time, &signals...)
+        : CANTXMessage(can_interface, id, length, period, start_time, signals...)
     {
         timer_group.AddTimer(transmit_timer_);
     }
