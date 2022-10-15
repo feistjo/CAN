@@ -4,6 +4,7 @@
 
 #include <array>
 #include <chrono>
+#include <functional>
 #include <vector>
 
 #include "virtualTimer.h"
@@ -158,7 +159,7 @@ public:
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
-        transmit_timer_.Start(start_time);
+        // transmit_timer_.Start(start_time);
     }
 
     template <typename... Ts>
@@ -203,12 +204,12 @@ private:
 
     void EncodeSignals()
     {
-        uint64_t temp_raw{0};
+        uint8_t *temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(&temp_raw);
+            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
-        *reinterpret_cast<uint64_t *>(message_.data_.data()) = temp_raw;
+        std::copy(std::begin(temp_raw), std::end(temp_raw), std::begin(message_.data_));
     }
 };
 
