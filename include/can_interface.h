@@ -194,14 +194,13 @@ public:
      * @param start_time The time in ms to start transmitting the message
      * @param signals The ICANSignals contained in the message
      */
-    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, uint32_t start_time, Ts &...signals)
+    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
-        // transmit_timer_.Start(start_time);
     }
 
     template <typename... Ts>
@@ -220,10 +219,9 @@ public:
                  uint16_t id,
                  uint8_t length,
                  uint32_t period,
-                 uint32_t start_time,
-                 VirtualTimerGroup timer_group,
+                 VirtualTimerGroup &timer_group,
                  Ts &...signals)
-        : CANTXMessage(can_interface, id, length, period, start_time, signals...)
+        : CANTXMessage(can_interface, id, length, period, signals...)
     {
         timer_group.AddTimer(transmit_timer_);
     }
