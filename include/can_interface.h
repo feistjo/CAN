@@ -5,7 +5,10 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <functional>
 #include <vector>
+
+#include "virtualTimer.h"
 
 class CANMessage
 {
@@ -141,8 +144,8 @@ private:
 class ICANTXMessage
 {
 public:
-    virtual void Tick(std::chrono::milliseconds elapsed_time) = 0;
     virtual uint16_t GetID() = 0;
+    virtual VirtualTimer &GetTransmitTimer() = 0;
     virtual void EncodeSignals() = 0;
 };
 
@@ -181,44 +184,72 @@ class CANTXMessage : public ICANTXMessage
 {
 public:
     template <typename... Ts>
-    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, std::chrono::milliseconds period, Ts &...signals)
+    /**
+     * @brief Construct a new CANTXMessage object
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
-          period_{period},
+          transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
     }
 
-    void Tick(std::chrono::milliseconds elapsed_time)
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 uint8_t length,
+                 uint32_t period,
+                 VirtualTimerGroup &timer_group,
+                 Ts &...signals)
+        : CANTXMessage(can_interface, id, length, period, signals...)
     {
-        timer_ -= elapsed_time;
-        if (timer_ <= std::chrono::milliseconds(0))
-        {
-            timer_ = period_;
-            EncodeSignals();
-            can_interface_.SendMessage(message_);
-        }
+        timer_group.AddTimer(transmit_timer_);
+    }
+
+    void EncodeAndSend()
+    {
+        EncodeSignals();
+        can_interface_.SendMessage(message_);
     }
 
     uint16_t GetID() { return message_.id_; }
 
+    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+
 private:
     ICAN &can_interface_;
     CANMessage message_;
-    std::chrono::milliseconds period_;
+    VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
-
-    std::chrono::milliseconds timer_{period_};
 
     void EncodeSignals()
     {
-        uint64_t temp_raw{0};
+        uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(&temp_raw);
+            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
-        *reinterpret_cast<uint64_t *>(message_.data_.data()) = temp_raw;
+        std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
 };
 
