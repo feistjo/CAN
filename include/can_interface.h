@@ -2,9 +2,13 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
+#include <functional>
 #include <vector>
+
+#include "virtualTimer.h"
 
 class CANMessage
 {
@@ -19,6 +23,11 @@ public:
 class ICANSignal
 {
 public:
+    enum class ByteOrder
+    {
+        kBigEndian,
+        kLittleEndian
+    };
     virtual void EncodeSignal(uint64_t *buffer) = 0;
     virtual void DecodeSignal(uint64_t *buffer) = 0;
 };
@@ -41,6 +50,8 @@ constexpr float CANTemplateGetFloat(int value) { return static_cast<float>(value
  * @tparam factor The factor to multiply the raw signal by (gotten using CANTemplateConvertFloat(float value))
  * @tparam offset The offset added to the raw signal (gotten using CANTemplateConvertFloat(float value))
  * @tparam signed_raw Whether or not the signal is signed
+ * @tparam byte_order The order of bytes in the signal (big endian or little endian). Do not change this from the
+ * default (little endian) if you aren't sure you need to.
  * @tparam mask This is calculated for you by default
  * @tparam unity_factor This is calculated for you by default
  */
@@ -50,6 +61,7 @@ template <typename SignalType,
           int factor,
           int offset,
           bool signed_raw = false,
+          ICANSignal::ByteOrder byte_order = ICANSignal::ByteOrder::kLittleEndian,
           uint64_t mask = generate_mask(position, length),
           bool unity_factor = factor == CANTemplateConvertFloat(1)
                               && offset == 0>  // unity_factor is used for increased precision on unity-factor 64-bit
@@ -63,13 +75,37 @@ public:
     {
         if (unity_factor)
         {
-            *buffer |= (static_cast<uint64_t>(signal_) << position) & mask;
+            if (byte_order == ByteOrder::kLittleEndian)
+            {
+                *buffer |= (static_cast<uint64_t>(signal_) << position) & mask;
+            }
+            else
+            {
+                uint8_t temp_reversed_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_reversed_buffer) |=
+                    (static_cast<uint64_t>(signal_) << (64 - (position + length)));
+                std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
+                *buffer |= *reinterpret_cast<uint64_t *>(temp_reversed_buffer) & mask;
+            }
         }
         else
         {
-            *buffer |= (static_cast<uint64_t>(((signal_ / CANTemplateGetFloat(factor)) + CANTemplateGetFloat(offset)))
-                        << position)
-                       & mask;
+            if (byte_order == ByteOrder::kLittleEndian)
+            {
+                *buffer |=
+                    (static_cast<uint64_t>(((signal_ / CANTemplateGetFloat(factor)) + CANTemplateGetFloat(offset)))
+                     << position)
+                    & mask;
+            }
+            else
+            {
+                uint8_t temp_reversed_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_reversed_buffer) |=
+                    (static_cast<uint64_t>(((signal_ / CANTemplateGetFloat(factor)) + CANTemplateGetFloat(offset)))
+                     << (64 - (position + length)));
+                std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
+                *buffer |= *reinterpret_cast<uint64_t *>(temp_reversed_buffer) & mask;
+            }
         }
     }
 
@@ -77,12 +113,21 @@ public:
     {
         if (unity_factor)
         {
-            signal_ = static_cast<SignalType>((*buffer & mask) >> position);
+            uint8_t temp_buffer[8]{0};
+            *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+            std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
+            signal_ =
+                static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
         }
         else
         {
-            signal_ = static_cast<SignalType>((((*buffer & mask) >> position) * CANTemplateGetFloat(factor))
-                                              + CANTemplateGetFloat(offset));
+            uint8_t temp_buffer[8]{0};
+            *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+            std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
+            signal_ =
+                static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
+                                         * CANTemplateGetFloat(factor))
+                                        + CANTemplateGetFloat(offset));
         }
     }
 
@@ -99,8 +144,8 @@ private:
 class ICANTXMessage
 {
 public:
-    virtual void Tick(std::chrono::milliseconds elapsed_time) = 0;
     virtual uint16_t GetID() = 0;
+    virtual VirtualTimer &GetTransmitTimer() = 0;
     virtual void EncodeSignals() = 0;
 };
 
@@ -139,44 +184,72 @@ class CANTXMessage : public ICANTXMessage
 {
 public:
     template <typename... Ts>
-    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, std::chrono::milliseconds period, Ts &...signals)
+    /**
+     * @brief Construct a new CANTXMessage object
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, Ts &...signals)
         : can_interface_{can_interface},
           message_{id, length, std::array<uint8_t, 8>()},
-          period_{period},
+          transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
     }
 
-    void Tick(std::chrono::milliseconds elapsed_time)
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 uint8_t length,
+                 uint32_t period,
+                 VirtualTimerGroup &timer_group,
+                 Ts &...signals)
+        : CANTXMessage(can_interface, id, length, period, signals...)
     {
-        timer_ -= elapsed_time;
-        if (timer_ <= std::chrono::milliseconds(0))
-        {
-            timer_ = period_;
-            EncodeSignals();
-            can_interface_.SendMessage(message_);
-        }
+        timer_group.AddTimer(transmit_timer_);
+    }
+
+    void EncodeAndSend()
+    {
+        EncodeSignals();
+        can_interface_.SendMessage(message_);
     }
 
     uint16_t GetID() { return message_.id_; }
 
+    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+
 private:
     ICAN &can_interface_;
     CANMessage message_;
-    std::chrono::milliseconds period_;
+    VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
-
-    std::chrono::milliseconds timer_{period_};
 
     void EncodeSignals()
     {
-        uint64_t temp_raw{0};
+        uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(&temp_raw);
+            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
-        *reinterpret_cast<uint64_t *>(message_.data_.data()) = temp_raw;
+        std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
 };
 
