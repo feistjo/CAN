@@ -93,7 +93,7 @@ public:
             if (byte_order == ByteOrder::kLittleEndian)
             {
                 *buffer |=
-                    (static_cast<uint64_t>(((signal_ + CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor))))
+                    (static_cast<uint64_t>(((signal_ + CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
                      << position)
                     & mask;
             }
