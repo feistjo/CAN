@@ -93,7 +93,7 @@ public:
             if (byte_order == ByteOrder::kLittleEndian)
             {
                 *buffer |=
-                    (static_cast<uint64_t>(((signal_ + CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                    (static_cast<uint64_t>(((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
                      << position)
                     & mask;
             }
@@ -101,7 +101,7 @@ public:
             {
                 uint8_t temp_reversed_buffer[8]{0};
                 *reinterpret_cast<uint64_t *>(temp_reversed_buffer) |=
-                    (static_cast<uint64_t>(((signal_ + CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                    (static_cast<uint64_t>(((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
                      << (64 - (position + length)));
                 std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
                 *buffer |= *reinterpret_cast<uint64_t *>(temp_reversed_buffer) & mask;
