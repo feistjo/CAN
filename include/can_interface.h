@@ -126,8 +126,8 @@ public:
             std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
             signal_ =
                 static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
-                                         + CANTemplateGetFloat(offset))
-                                        * CANTemplateGetFloat(factor));
+                                         * CANTemplateGetFloat(factor))
+                                        + CANTemplateGetFloat(offset));
         }
     }
 
