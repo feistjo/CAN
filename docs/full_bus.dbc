@@ -32,7 +32,7 @@ NS_ :
     SG_MUL_VAL_
 
 BS_: 
-BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle 
+BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel B_Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle F_Brake_Pressure 
 BO_ 1073741824 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
    SG_ NewSignal_0009 : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
@@ -437,7 +437,7 @@ BO_ 563 BMS_Temperatures_19: 8 BMS
    SG_ Cell_T_138 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
    SG_ Cell_T_139 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
 
-BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
+BO_ 1041 Back_Brake_Pressure: 2 B_Brake_Pressure
    SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 1074 Gyroscope: 6 Motion_Board
@@ -448,6 +448,9 @@ BO_ 1074 Gyroscope: 6 Motion_Board
 BO_ 768 Throttle_Limit: 8 E_Throttle
    SG_ Throttle_Min : 0|16@1+ (1,0) [0|0] "" Vector__XXX
    SG_ Throttle_Max : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 1040 Front_Brake_Pressure: 2 F_Brake_Pressure
+   SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BA_DEF_ BO_ "GenMsgCycleTime" INT 0 10000;
 BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
