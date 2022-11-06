@@ -117,7 +117,7 @@ public:
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
                 signal_ =
-                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
+                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> position);
             } else {
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
@@ -132,7 +132,7 @@ public:
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
                 signal_ =
-                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
+                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> position)
                                             * CANTemplateGetFloat(factor))
                                             + CANTemplateGetFloat(offset));
             } else {
