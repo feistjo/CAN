@@ -113,21 +113,38 @@ public:
     {
         if (unity_factor)
         {
-            uint8_t temp_buffer[8]{0};
-            *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
-            std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
-            signal_ =
-                static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
+            if (byte_order == ByteOrder::kLittleEndian){
+                uint8_t temp_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+                signal_ =
+                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
+            } else {
+                uint8_t temp_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+                std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
+                signal_ =
+                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
+            }
         }
         else
         {
-            uint8_t temp_buffer[8]{0};
-            *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
-            std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
-            signal_ =
-                static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
-                                         * CANTemplateGetFloat(factor))
-                                        + CANTemplateGetFloat(offset));
+            if (byte_order == ByteOrder::kLittleEndian){
+                uint8_t temp_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+                signal_ =
+                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
+                                            * CANTemplateGetFloat(factor))
+                                            + CANTemplateGetFloat(offset));
+            } else {
+                uint8_t temp_buffer[8]{0};
+                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+                std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
+                signal_ =
+                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
+                                            * CANTemplateGetFloat(factor))
+                                            + CANTemplateGetFloat(offset));
+            }
+            
         }
     }
 
