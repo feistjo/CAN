@@ -469,7 +469,7 @@ BO_ 1041 Back_Brake_Pressure: 2 B_Brake_Pressure
  SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 768 Throttle_Limit: 2 E_Throttle
- SG_ Motor_Torque : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Motor_Torque : 0|16@1+ (1,0) [0|0] "N*m" Vector__XXX
 
 BO_ 1040 Front_Brake_Pressure: 2 F_Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
