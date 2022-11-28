@@ -22,3 +22,5 @@ This code base currently includes the following hardware platforms:
 - ESP32
 
 More support to come in the future.
+
+We would also like to thank our sponsor [Innomaker](https://www.inno-maker.com/product/usb2can-cable/) for supporting us with their products for the 22-23 season!
