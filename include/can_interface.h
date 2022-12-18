@@ -6,6 +6,7 @@
 #include <array>
 #include <chrono>
 #include <functional>
+#include <type_traits>
 #include <vector>
 
 #include "virtualTimer.h"
@@ -40,6 +41,22 @@ constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
 static constexpr int kCANTemplateFloatDenominator{10000};
 constexpr int CANTemplateConvertFloat(float value) { return value * kCANTemplateFloatDenominator; }
 constexpr float CANTemplateGetFloat(int value) { return static_cast<float>(value) / kCANTemplateFloatDenominator; }
+
+template <bool signed_raw>
+struct GetCANRawType;
+
+template <>
+struct GetCANRawType<true>
+{
+    using type = int64_t;
+};
+
+template <>
+struct GetCANRawType<false>
+{
+    using type = uint64_t;
+};
+
 /**
  * @brief A class for decoding and encoding CAN signals. Note: only works with little endian signals on a little endian
  * architecture, and you must manually ensure consistency with the DBC
@@ -68,6 +85,8 @@ template <typename SignalType,
                                                // signals by getting rid of floating point error
 class CANSignal : public ICANSignal
 {
+    using underlying_type = typename GetCANRawType<signed_raw>::type;
+
 public:
     CANSignal() {}
 
@@ -77,34 +96,35 @@ public:
         {
             if (byte_order == ByteOrder::kLittleEndian)
             {
-                *buffer |= (static_cast<uint64_t>(signal_) << position) & mask;
+                *buffer |= (static_cast<underlying_type>(signal_) << position) & mask;
             }
             else
             {
                 uint8_t temp_reversed_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_reversed_buffer) |=
-                    (static_cast<uint64_t>(signal_) << (64 - (position + length)));
+                *reinterpret_cast<underlying_type *>(temp_reversed_buffer) |=
+                    (static_cast<underlying_type>(signal_) << (64 - (position + length)));
                 std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
-                *buffer |= *reinterpret_cast<uint64_t *>(temp_reversed_buffer) & mask;
+                *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer) & mask;
             }
         }
         else
         {
             if (byte_order == ByteOrder::kLittleEndian)
             {
-                *buffer |=
-                    (static_cast<uint64_t>(((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
-                     << position)
-                    & mask;
+                *buffer |= (static_cast<underlying_type>(
+                                ((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                            << position)
+                           & mask;
             }
             else
             {
                 uint8_t temp_reversed_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_reversed_buffer) |=
-                    (static_cast<uint64_t>(((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                *reinterpret_cast<underlying_type *>(temp_reversed_buffer) |=
+                    (static_cast<underlying_type>(
+                         ((signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
                      << (64 - (position + length)));
                 std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
-                *buffer |= *reinterpret_cast<uint64_t *>(temp_reversed_buffer) & mask;
+                *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer) & mask;
             }
         }
     }
@@ -113,38 +133,41 @@ public:
     {
         if (unity_factor)
         {
-            if (byte_order == ByteOrder::kLittleEndian){
+            if (byte_order == ByteOrder::kLittleEndian)
+            {
                 uint8_t temp_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
-                signal_ =
-                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> position);
-            } else {
+                *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
+                signal_ = static_cast<SignalType>((*reinterpret_cast<underlying_type *>(temp_buffer)) >> position);
+            }
+            else
+            {
                 uint8_t temp_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
+                *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
                 std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
-                signal_ =
-                    static_cast<SignalType>((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)));
+                signal_ = static_cast<SignalType>((*reinterpret_cast<underlying_type *>(temp_buffer))
+                                                  >> (64 - (position + length)));
             }
         }
         else
         {
-            if (byte_order == ByteOrder::kLittleEndian){
+            if (byte_order == ByteOrder::kLittleEndian)
+            {
                 uint8_t temp_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
-                signal_ =
-                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> position)
-                                            * CANTemplateGetFloat(factor))
-                                            + CANTemplateGetFloat(offset));
-            } else {
-                uint8_t temp_buffer[8]{0};
-                *reinterpret_cast<uint64_t *>(temp_buffer) = *buffer & mask;
-                std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
-                signal_ =
-                    static_cast<SignalType>((((*reinterpret_cast<uint64_t *>(temp_buffer)) >> (64 - (position + length)))
-                                            * CANTemplateGetFloat(factor))
-                                            + CANTemplateGetFloat(offset));
+                *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
+                signal_ = static_cast<SignalType>(
+                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) >> position) * CANTemplateGetFloat(factor))
+                    + CANTemplateGetFloat(offset));
             }
-            
+            else
+            {
+                uint8_t temp_buffer[8]{0};
+                *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
+                std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
+                signal_ = static_cast<SignalType>(
+                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) >> (64 - (position + length)))
+                     * CANTemplateGetFloat(factor))
+                    + CANTemplateGetFloat(offset));
+            }
         }
     }
 
