@@ -6,7 +6,6 @@
 #include <array>
 #include <chrono>
 #include <functional>
-#include <type_traits>
 #include <vector>
 
 #include "virtualTimer.h"
