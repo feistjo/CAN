@@ -136,15 +136,16 @@ public:
             {
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
-                signal_ = static_cast<SignalType>((*reinterpret_cast<underlying_type *>(temp_buffer)) >> position);
+                signal_ = static_cast<SignalType>(
+                    (*reinterpret_cast<underlying_type *>(temp_buffer)) << (64 - (position + length)) >> (64 - length));
             }
             else
             {
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
                 std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
-                signal_ = static_cast<SignalType>((*reinterpret_cast<underlying_type *>(temp_buffer))
-                                                  >> (64 - (position + length)));
+                signal_ = static_cast<SignalType>((*reinterpret_cast<underlying_type *>(temp_buffer)) << position
+                                                  >> (64 - length));
             }
         }
         else
@@ -154,7 +155,9 @@ public:
                 uint8_t temp_buffer[8]{0};
                 *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
                 signal_ = static_cast<SignalType>(
-                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) >> position) * CANTemplateGetFloat(factor))
+                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) << (64 - (position + length))
+                      >> (64 - length))
+                     * CANTemplateGetFloat(factor))
                     + CANTemplateGetFloat(offset));
             }
             else
@@ -163,7 +166,7 @@ public:
                 *reinterpret_cast<underlying_type *>(temp_buffer) = *buffer & mask;
                 std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
                 signal_ = static_cast<SignalType>(
-                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) >> (64 - (position + length)))
+                    (((*reinterpret_cast<underlying_type *>(temp_buffer)) << position >> (64 - length))
                      * CANTemplateGetFloat(factor))
                     + CANTemplateGetFloat(offset));
             }

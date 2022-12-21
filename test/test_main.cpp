@@ -43,7 +43,7 @@ void CanSignalTest(void)
 
 void SignedCanSignalTest(void)
 {
-    CANSignal<int16_t, 0, 16, CANTemplateConvertFloat(1), 0, true> test_signal;
+    CANSignal<float, 0, 16, CANTemplateConvertFloat(1), 0, true> test_signal;
     test_signal = 0;
     uint64_t test_buf{0};
     test_signal.EncodeSignal(&test_buf);
@@ -53,7 +53,7 @@ void SignedCanSignalTest(void)
     TEST_ASSERT_EQUAL_HEX64(0xFFFF, test_buf);
 
     test_signal.DecodeSignal(&test_buf);
-    TEST_ASSERT_EQUAL_INT16(-1, test_signal);
+    TEST_ASSERT_EQUAL_FLOAT(-1, test_signal);
 }
 
 void BigEndianCanSignalTest(void)
