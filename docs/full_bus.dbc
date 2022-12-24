@@ -36,17 +36,6 @@ BS_:
 BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel B_Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle F_Brake_Pressure
 
 
-BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
- SG_ Throttle_Max : 16|16@1+ (1,0) [0|0] "" Vector__XXX
- SG_ Gyro_X : 0|16@1+ (0.0005,0) [0|0] "rad/s" Vector__XXX
- SG_ Gyro_Y : 16|16@1+ (0.0005,0) [0|0] "rad/s" Vector__XXX
- SG_ Gyro_Z : 32|16@1+ (0.0005,0) [0|0] "rad/s" Vector__XXX
- SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
- SG_ Rear_Brake_Pressure : 16|16@1+ (1,0) [0|0] "psi" Vector__XXX
-
-BO_ 1073741824 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
- SG_ NewSignal_0009 : 0|8@1+ (1,0) [0|0] "" Vector__XXX
-
 BO_ 1024 FL_Wheel: 4 FL_Wheel
  SG_ FL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ FL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
@@ -66,7 +55,7 @@ BO_ 1027 BR_Wheel: 4 BR_Wheel
 BO_ 1056 Ptrain_Temps: 6 Temp_Board
  SG_ Motor_Temperature : 0|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
  SG_ Coolant_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
- SG_ Ambient_Temperature : 32|16@1+ (0.1,-40) [0|0] "" Vector__XXX
+ SG_ Ambient_Temperature : 32|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1072 GPS: 8 Motion_Board
  SG_ Latitude : 0|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
@@ -468,8 +457,8 @@ BO_ 563 BMS_Temperatures_19: 8 BMS
 BO_ 1041 Back_Brake_Pressure: 2 B_Brake_Pressure
  SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
-BO_ 768 Throttle_Limit: 2 E_Throttle
- SG_ Motor_Torque : 0|16@1+ (1,0) [0|0] "N*m" Vector__XXX
+BO_ 768 Throttle_Torque: 2 E_Throttle
+ SG_ Motor_Torque : 0|16@1- (1,0) [0|0] "N*m" Vector__XXX
 
 BO_ 1040 Front_Brake_Pressure: 2 F_Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
