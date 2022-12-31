@@ -33,7 +33,7 @@ NS_ :
 
 BS_:
 
-BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel B_Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle F_Brake_Pressure
+BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle
 
 
 BO_ 1024 FL_Wheel: 4 FL_Wheel
@@ -454,13 +454,13 @@ BO_ 563 BMS_Temperatures_19: 8 BMS
  SG_ Cell_T_138 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
  SG_ Cell_T_139 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
 
-BO_ 1041 Back_Brake_Pressure: 2 B_Brake_Pressure
+BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
  SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 768 Throttle_Torque: 2 E_Throttle
  SG_ Motor_Torque : 0|16@1- (1,0) [0|0] "N*m" Vector__XXX
 
-BO_ 1040 Front_Brake_Pressure: 2 F_Brake_Pressure
+BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 
