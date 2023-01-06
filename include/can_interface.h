@@ -87,7 +87,10 @@ class CANSignal : public ICANSignal
     using underlying_type = typename GetCANRawType<signed_raw>::type;
 
 public:
-    CANSignal() {}
+    CANSignal()
+    {
+        static_assert(factor != 0, "The integer representation of the factor for a CAN signal must not be 0");
+    }
 
     void EncodeSignal(uint64_t *buffer) override
     {
