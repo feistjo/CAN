@@ -37,7 +37,7 @@ constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
 {
     return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
 }
-static constexpr int kCANTemplateFloatDenominator{10000};
+static constexpr int kCANTemplateFloatDenominator{1 << 16};  // 2^16
 constexpr int CANTemplateConvertFloat(float value) { return value * kCANTemplateFloatDenominator; }
 constexpr float CANTemplateGetFloat(int value) { return static_cast<float>(value) / kCANTemplateFloatDenominator; }
 
@@ -87,7 +87,10 @@ class CANSignal : public ICANSignal
     using underlying_type = typename GetCANRawType<signed_raw>::type;
 
 public:
-    CANSignal() {}
+    CANSignal()
+    {
+        static_assert(factor != 0, "The integer representation of the factor for a CAN signal must not be 0");
+    }
 
     void EncodeSignal(uint64_t *buffer) override
     {
