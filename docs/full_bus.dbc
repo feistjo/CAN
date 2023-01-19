@@ -36,36 +36,6 @@ BS_:
 BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle
 
 
-BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
- SG_ Cell_T_133 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_134 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_135 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_136 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_137 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_138 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_139 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_126 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_127 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_128 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_129 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_130 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_131 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_132 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_119 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_120 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_121 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_122 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_123 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_124 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_125 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_112 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_113 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_114 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_115 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_116 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_117 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_118 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
-
 BO_ 1024 FL_Wheel: 4 FL_Wheel
  SG_ FL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
  SG_ FL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
