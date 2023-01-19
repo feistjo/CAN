@@ -10,6 +10,10 @@
 
 #include "virtualTimer.h"
 
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
+
 class CANMessage
 {
 public:
