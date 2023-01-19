@@ -281,6 +281,9 @@ public:
 
     VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
 
+    void Enable() { transmit_timer_.Enable(); }
+    void Disable() { transmit_timer_.Disable(); }
+
 private:
     ICAN &can_interface_;
     CANMessage message_;
@@ -306,6 +309,14 @@ class CANRXMessage : public ICANRXMessage
 {
 public:
     template <typename... Ts>
+    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<void(void)> callback_function, Ts &...signals)
+        : can_interface_{can_interface}, id_{id}, callback_function_{callback_function}, signals_{&signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
+        can_interface_.RegisterRXMessage(*this);
+    }
+
+    template <typename... Ts>
     CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
         : can_interface_{can_interface}, id_{id}, signals_{&signals...}
     {
@@ -322,7 +333,21 @@ public:
         {
             signals_[i]->DecodeSignal(&temp_raw);
         }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+#ifdef ARDUINO
+        last_receive_time_ = millis();
+#endif
+#ifdef NATIVE
+        last_receive_time_ += 1;  // just keep track of how many messages have been received if native
+#endif
     }
+
+    uint32_t GetLastReceiveTime() { return last_receive_time_; }
 
 private:
     ICAN &can_interface_;
@@ -330,4 +355,6 @@ private:
     std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
+    std::function<void(void)> callback_function_ = nullptr;
+    uint32_t last_receive_time_ = 0;
 };
