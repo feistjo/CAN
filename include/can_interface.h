@@ -313,20 +313,42 @@ class CANRXMessage : public ICANRXMessage
 {
 public:
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<void(void)> callback_function, Ts &...signals)
-        : can_interface_{can_interface}, id_{id}, callback_function_{callback_function}, signals_{&signals...}
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<uint32_t(void)> get_millis,
+                 std::function<void(void)> callback_function,
+                 Ts &...signals)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          signals_{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
         can_interface_.RegisterRXMessage(*this);
     }
 
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
-        : can_interface_{can_interface}, id_{id}, signals_{&signals...}
+    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<uint32_t(void)> get_millis, Ts &...signals)
+        : CANRXMessage{can_interface, id, get_millis, nullptr, &signals...}
     {
-        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
-        can_interface_.RegisterRXMessage(*this);
     }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<void(void)> callback_function, Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, &signals...}
+    {
+    }
+
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, &signals...}
+    {
+    }
+#endif
 
     uint16_t GetID() { return id_; }
 
@@ -343,15 +365,12 @@ public:
         {
             callback_function_();
         }
-#ifdef ARDUINO
-        last_receive_time_ = millis();
-#endif
-#ifdef NATIVE
-        last_receive_time_ += 1;  // just keep track of how many messages have been received if native
-#endif
+
+        last_receive_time_ = get_millis_();
     }
 
     uint32_t GetLastReceiveTime() { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() { return get_millis_() - last_receive_time_; }
 
 private:
     ICAN &can_interface_;
@@ -359,6 +378,11 @@ private:
     std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
-    std::function<void(void)> callback_function_ = nullptr;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
     uint32_t last_receive_time_ = 0;
+
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
 };
