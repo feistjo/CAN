@@ -436,11 +436,12 @@ BO_ 576 BMS_SOE: 8 BMS
 
 BO_ 592 BMS_Faults: 8 BMS
 
-BO_ 577 BMS_CellInfo: 8 BMS
+BO_ 577 BMS_Status: 8 BMS
  SG_ Max_Cell_Temp : 0|8@1+ (1,-40) [0|100] "A" Vector__XXX
  SG_ Min_Cell_Temp : 8|8@1+ (1,-40) [0|100] "A" Vector__XXX
  SG_ Max_Cell_Voltage : 16|8@1+ (0.012,2) [0|5] "V" Vector__XXX
  SG_ Min_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
+ SG_ BMS_SOC : 32|8@1+ (0.5,0) [0|100] "%" Vector__XXX
 
 
 
