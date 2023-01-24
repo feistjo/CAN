@@ -58,8 +58,8 @@ BO_ 1056 Ptrain_Temps: 6 Temp_Board
  SG_ Ambient_Temperature : 32|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1072 GPS: 8 Motion_Board
- SG_ Latitude : 0|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
- SG_ Longitude : 32|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
+ SG_ Latitude : 0|32@1- (1,0) [0|0] "1e-7 degrees" Vector__XXX
+ SG_ Longitude : 32|32@1- (1,0) [0|0] "1e-7 degrees" Vector__XXX
 
 BO_ 1073 Accelerometer: 6 Motion_Board
  SG_ Accel_X : 0|16@1- (0.0005,0) [0|0] "G" Vector__XXX
@@ -275,184 +275,148 @@ BO_ 531 BMS_Voltages_19: 8 BMS
  SG_ Cell_OCV_Offset_219 : 56|8@1+ (0.004,0) [0|0] "V" Vector__XXX
 
 BO_ 544 BMS_Temperatures_0: 8 BMS
- SG_ Cell_T_0 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_1 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_2 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_3 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_4 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_5 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_6 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_0 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_1 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_2 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_3 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_4 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_5 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_6 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 545 BMS_Temperatures_1: 8 BMS
- SG_ Cell_T_7 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_8 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_9 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_10 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_11 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_12 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_13 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_7 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_8 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_9 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_10 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_11 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_12 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_13 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 546 BMS_Temperatures_2: 8 BMS
- SG_ Cell_T_14 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_15 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_16 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_17 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_18 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_19 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_20 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_14 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_15 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_16 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_17 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_18 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_19 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_20 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 547 BMS_Temperatures_3: 8 BMS
- SG_ Cell_T_21 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_22 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_23 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_24 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_25 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_26 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_27 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_21 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_22 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_23 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_24 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_25 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_26 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_27 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 548 BMS_Temperatures_4: 8 BMS
- SG_ Cell_T_28 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_29 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_30 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_31 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_32 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_33 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_34 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_28 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_29 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_30 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_31 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_32 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_33 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_34 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 549 BMS_Temperatures_5: 8 BMS
- SG_ Cell_T_35 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_36 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_37 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_38 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_39 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_40 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_41 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_35 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_36 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_37 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_38 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_39 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_40 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_41 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 550 BMS_Temperatures_6: 8 BMS
- SG_ Cell_T_42 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_43 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_44 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_45 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_46 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_47 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_48 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_42 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_43 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_44 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_45 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_46 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_47 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_48 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 551 BMS_Temperatures_7: 8 BMS
- SG_ Cell_T_49 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_50 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_51 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_52 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_53 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_54 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_55 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_49 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_50 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_51 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_52 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_53 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_54 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_55 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 552 BMS_Temperatures_8: 8 BMS
- SG_ Cell_T_56 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_57 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_58 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_59 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_60 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_61 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_62 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_56 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_57 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_58 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_59 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_60 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_61 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_62 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 553 BMS_Temperatures_9: 8 BMS
- SG_ Cell_T_63 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_64 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_65 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_66 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_67 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_68 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_69 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_63 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_64 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_65 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_66 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_67 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_68 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_69 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 554 BMS_Temperatures_10: 8 BMS
- SG_ Cell_T_70 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_71 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_72 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_73 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_74 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_75 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_76 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_70 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_71 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_72 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_73 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_74 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_75 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_76 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 555 BMS_Temperatures_11: 8 BMS
- SG_ Cell_T_77 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_78 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_79 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_80 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_81 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_82 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_83 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_77 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_78 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_79 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_80 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_81 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_82 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_83 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 556 BMS_Temperatures_12: 8 BMS
- SG_ Cell_T_84 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_85 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_86 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_87 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_88 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_89 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_90 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_84 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_85 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_86 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_87 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_88 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_89 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_90 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 557 BMS_Temperatures_13: 8 BMS
- SG_ Cell_T_91 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_92 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_93 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_94 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_95 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_96 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_97 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_91 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_92 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_93 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_94 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_95 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_96 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_97 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 558 BMS_Temperatures_14: 8 BMS
- SG_ Cell_T_98 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_99 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_100 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_101 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_102 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_103 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_104 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_98 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_99 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_100 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_101 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_102 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_103 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_104 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 559 BMS_Temperatures_15: 8 BMS
- SG_ Cell_T_105 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_106 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_107 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_108 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_109 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_110 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_111 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
-
-BO_ 560 BMS_Temperatures_16: 8 BMS
- SG_ Cell_T_112 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_113 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_114 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_115 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_116 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_117 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_118 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
-
-BO_ 561 BMS_Temperatures_17: 8 BMS
- SG_ Cell_T_119 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_120 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_121 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_122 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_123 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_124 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_125 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
-
-BO_ 562 BMS_Temperatures_18: 8 BMS
- SG_ Cell_T_126 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_127 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_128 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_129 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_130 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_131 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_132 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
-
-BO_ 563 BMS_Temperatures_19: 8 BMS
- SG_ Cell_T_133 : 0|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_134 : 8|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_135 : 16|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_136 : 24|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_137 : 32|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_138 : 40|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
- SG_ Cell_T_139 : 48|8@1+ (0.04,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_105 : 0|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_106 : 8|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_107 : 16|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_108 : 24|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_109 : 32|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
+ SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
  SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
@@ -462,6 +426,22 @@ BO_ 768 Throttle_Torque: 2 E_Throttle
 
 BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
+
+BO_ 576 BMS_SOE: 8 BMS
+ SG_ Max_Discharge_Current : 0|12@1+ (0.1,0) [0|300] "A" Vector__XXX
+ SG_ Max_Regen_Current : 12|12@1+ (0.1,0) [0|300] "A" Vector__XXX
+ SG_ Battery_Voltage : 24|16@1+ (0.01,0) [0|600] "V" Vector__XXX
+ SG_ Battery_Temperature : 40|8@1+ (1,-40) [0|100] "C" Vector__XXX
+ SG_ Battery_Current : 48|16@1- (0.01,0) [-300|300] "A" Vector__XXX
+
+BO_ 592 BMS_Faults: 8 BMS
+
+BO_ 577 BMS_Status: 8 BMS
+ SG_ Max_Cell_Temp : 0|8@1+ (1,-40) [0|100] "A" Vector__XXX
+ SG_ Min_Cell_Temp : 8|8@1+ (1,-40) [0|100] "A" Vector__XXX
+ SG_ Max_Cell_Voltage : 16|8@1+ (0.012,2) [0|5] "V" Vector__XXX
+ SG_ Min_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
+ SG_ BMS_SOC : 32|8@1+ (0.5,0) [0|100] "%" Vector__XXX
 
 
 
@@ -515,8 +495,7 @@ BA_ "GenMsgCycleTime" BO_ 556 100;
 BA_ "GenMsgCycleTime" BO_ 557 100;
 BA_ "GenMsgCycleTime" BO_ 558 100;
 BA_ "GenMsgCycleTime" BO_ 559 100;
-BA_ "GenMsgCycleTime" BO_ 560 100;
-BA_ "GenMsgCycleTime" BO_ 561 100;
-BA_ "GenMsgCycleTime" BO_ 562 100;
-BA_ "GenMsgCycleTime" BO_ 563 100;
+BA_ "GenMsgCycleTime" BO_ 576 10;
+BA_ "GenMsgCycleTime" BO_ 592 100;
+BA_ "GenMsgCycleTime" BO_ 577 100;
 
