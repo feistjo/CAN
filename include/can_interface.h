@@ -317,20 +317,25 @@ public:
                  uint16_t id,
                  std::function<uint32_t(void)> get_millis,
                  std::function<void(void)> callback_function,
+                 ICANSignal &signal_1,
                  Ts &...signals)
         : can_interface_{can_interface},
           id_{id},
           get_millis_{get_millis},
           callback_function_{callback_function},
-          signals_{&signals...}
+          signals_{&signal_1, &signals...}
     {
-        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANRXMessage.");
         can_interface_.RegisterRXMessage(*this);
     }
 
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<uint32_t(void)> get_millis, Ts &...signals)
-        : CANRXMessage{can_interface, id, get_millis, nullptr, signals...}
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<uint32_t(void)> get_millis,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : CANRXMessage{can_interface, id, get_millis, nullptr, signal_1, signals...}
     {
     }
 
@@ -338,14 +343,18 @@ public:
 // current time
 #ifdef ARDUINO
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, std::function<void(void)> callback_function, Ts &...signals)
-        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signals...}
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<void(void)> callback_function,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signal_1, signals...}
     {
     }
 
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
-        : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signals...}
+    CANRXMessage(ICAN &can_interface, uint16_t id, ICANSignal &signal_1, Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
     {
     }
 #endif
