@@ -330,7 +330,7 @@ public:
 
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface, uint16_t id, std::function<uint32_t(void)> get_millis, Ts &...signals)
-        : CANRXMessage{can_interface, id, get_millis, nullptr, &signals...}
+        : CANRXMessage{can_interface, id, get_millis, nullptr, signals...}
     {
     }
 
@@ -339,13 +339,13 @@ public:
 #ifdef ARDUINO
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface, uint16_t id, std::function<void(void)> callback_function, Ts &...signals)
-        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, &signals...}
+        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signals...}
     {
     }
 
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
-        : CANRXMessage{can_interface, id, []() { return millis(); }, &signals...}
+        : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signals...}
     {
     }
 #endif
@@ -375,14 +375,15 @@ public:
 private:
     ICAN &can_interface_;
     uint16_t id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
     std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
 
-    // The callback function should be a very short function that will get called every time a new message is received.
-    std::function<void(void)> callback_function_;
     uint32_t last_receive_time_ = 0;
-
-    // A function to get the current time in millis on the current platform
-    std::function<uint32_t(void)> get_millis_;
 };
