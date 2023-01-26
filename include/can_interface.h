@@ -14,12 +14,6 @@
 #include <Arduino.h>
 #endif
 
-// Macros for making signed and unsigned little-endian CAN signals
-#define MakeUnsignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset)>
-#define MakeSignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset), true>
-
 class CANMessage
 {
 public:
@@ -195,6 +189,12 @@ public:
 private:
     SignalType signal_;
 };
+
+// Macros for making signed and unsigned little-endian CAN signals
+#define MakeUnsignedCANSignal(SignalType, position, length, factor, offset) \
+    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset)>
+#define MakeSignedCANSignal(SignalType, position, length, factor, offset) \
+    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset), true>
 
 class ICANTXMessage
 {
