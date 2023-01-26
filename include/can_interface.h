@@ -10,6 +10,10 @@
 
 #include "virtualTimer.h"
 
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
+
 class CANMessage
 {
 public:
@@ -281,6 +285,9 @@ public:
 
     VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
 
+    void Enable() { transmit_timer_.Enable(); }
+    void Disable() { transmit_timer_.Disable(); }
+
 private:
     ICAN &can_interface_;
     CANMessage message_;
@@ -306,12 +313,51 @@ class CANRXMessage : public ICANRXMessage
 {
 public:
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, Ts &...signals)
-        : can_interface_{can_interface}, id_{id}, signals_{&signals...}
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<uint32_t(void)> get_millis,
+                 std::function<void(void)> callback_function,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          signals_{&signal_1, &signals...}
     {
-        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANRXMessage.");
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANRXMessage.");
         can_interface_.RegisterRXMessage(*this);
     }
+
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<uint32_t(void)> get_millis,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : CANRXMessage{can_interface, id, get_millis, nullptr, signal_1, signals...}
+    {
+    }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface,
+                 uint16_t id,
+                 std::function<void(void)> callback_function,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signal_1, signals...}
+    {
+    }
+
+    template <typename... Ts>
+    CANRXMessage(ICAN &can_interface, uint16_t id, ICANSignal &signal_1, Ts &...signals)
+        : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
+    {
+    }
+#endif
 
     uint16_t GetID() { return id_; }
 
@@ -322,12 +368,31 @@ public:
         {
             signals_[i]->DecodeSignal(&temp_raw);
         }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+
+        last_receive_time_ = get_millis_();
     }
+
+    uint32_t GetLastReceiveTime() { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() { return get_millis_() - last_receive_time_; }
 
 private:
     ICAN &can_interface_;
     uint16_t id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
     std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
+
+    uint32_t last_receive_time_ = 0;
 };

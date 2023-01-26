@@ -1,3 +1,4 @@
+#define NATIVE  // to make can interface increment last receive time
 #include "can_interface.h"
 #include "unity.h"
 

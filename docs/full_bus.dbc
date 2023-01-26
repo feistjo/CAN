@@ -58,8 +58,8 @@ BO_ 1056 Ptrain_Temps: 6 Temp_Board
  SG_ Ambient_Temperature : 32|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1072 GPS: 8 Motion_Board
- SG_ Latitude : 0|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
- SG_ Longitude : 32|32@1- (1e-07,0) [0|0] "degrees" Vector__XXX
+ SG_ Latitude : 0|32@1- (1,0) [0|0] "1e-7 degrees" Vector__XXX
+ SG_ Longitude : 32|32@1- (1,0) [0|0] "1e-7 degrees" Vector__XXX
 
 BO_ 1073 Accelerometer: 6 Motion_Board
  SG_ Accel_X : 0|16@1- (0.0005,0) [0|0] "G" Vector__XXX
