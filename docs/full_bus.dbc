@@ -441,8 +441,8 @@ BO_ 577 BMS_Status: 8 BMS
  SG_ Min_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
  SG_ BMS_SOC : 32|8@1+ (0.5,0) [0|100] "%" Vector__XXX
 
-BO_ 1057 Coolant: 1 Vector__XXX
- SG_ Coolant_Flow : 0|8@1+ (0.01,0) [0|0] "" Vector__XXX
+BO_ 1057 Coolant: 1 Temp_Board
+ SG_ Coolant_Flow : 0|8@1+ (0.01,0) [0|0] "L/min" Vector__XXX
 
 
 
