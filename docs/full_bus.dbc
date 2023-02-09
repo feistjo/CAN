@@ -418,14 +418,12 @@ BO_ 559 BMS_Temperatures_15: 8 BMS
  SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
  SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
-BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
- SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
-
 BO_ 768 Throttle_Torque: 2 E_Throttle
  SG_ Motor_Torque : 0|16@1- (1,0) [0|0] "N*m" Vector__XXX
 
-BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
+BO_ 1040 Brake_Pressure: 4 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
+ SG_ Back_Brake_Pressure : 16|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 576 BMS_SOE: 8 BMS
  SG_ Max_Discharge_Current : 0|12@1+ (0.1,0) [0|300] "A" Vector__XXX
@@ -442,6 +440,9 @@ BO_ 577 BMS_Status: 8 BMS
  SG_ Max_Cell_Voltage : 16|8@1+ (0.012,2) [0|5] "V" Vector__XXX
  SG_ Min_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
  SG_ BMS_SOC : 32|8@1+ (0.5,0) [0|100] "%" Vector__XXX
+
+BO_ 1057 Coolant: 1 Temp_Board
+ SG_ Coolant_Flow : 0|16@2+ (0.01,0) [0|0] "L/min" Vector__XXX
 
 
 
