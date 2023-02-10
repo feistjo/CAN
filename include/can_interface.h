@@ -202,6 +202,7 @@ public:
     virtual uint16_t GetID() = 0;
     virtual VirtualTimer &GetTransmitTimer() = 0;
     virtual void EncodeSignals() = 0;
+    virtual void EncodeAndSend() = 0;
 };
 
 class ICANRXMessage
@@ -281,7 +282,7 @@ public:
         timer_group.AddTimer(transmit_timer_);
     }
 
-    void EncodeAndSend()
+    void EncodeAndSend() override
     {
         EncodeSignals();
         can_interface_.SendMessage(message_);
