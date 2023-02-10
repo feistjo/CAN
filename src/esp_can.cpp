@@ -42,6 +42,7 @@ bool ESPCAN::SendMessage(CANMessage &msg)
 {
     CAN_frame_t tx_frame;
     tx_frame.FIR.B.FF = CAN_frame_std;
+    tx_frame.FIR.B.RTR = CAN_no_RTR;
     bool ret = false;
 
     tx_frame.MsgID = msg.id_;
