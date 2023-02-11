@@ -69,6 +69,20 @@ void BigEndianCanSignalTest(void)
     TEST_ASSERT_EQUAL_HEX16(0xFF00, test_signal);
 }
 
+void TypedCanSignalTest(void)
+{
+    CANSignal<uint8_t, 0, 8, CANTemplateConvertFloat(1), 0> actual_test_signal;
+    ITypedCANSignal<uint8_t>& test_signal = actual_test_signal;
+    test_signal = 0;
+    uint64_t test_buf{0};
+    test_signal.EncodeSignal(&test_buf);
+    TEST_ASSERT_EQUAL_HEX64(0, test_buf);
+    test_signal = 0xFF;
+    TEST_ASSERT_EQUAL_HEX16(0xFF, test_signal);
+    test_signal.EncodeSignal(&test_buf);
+    TEST_ASSERT_EQUAL_HEX64(0xFF, test_buf);
+}
+
 int runUnityTests(void)
 {
     UNITY_BEGIN();
