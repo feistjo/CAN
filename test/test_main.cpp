@@ -89,6 +89,7 @@ int runUnityTests(void)
     RUN_TEST(CanSignalTest);
     RUN_TEST(BigEndianCanSignalTest);
     RUN_TEST(SignedCanSignalTest);
+    RUN_TEST(TypedCanSignalTest);
     return UNITY_END();
 }
 
