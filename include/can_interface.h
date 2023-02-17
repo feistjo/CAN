@@ -350,7 +350,7 @@ public:
           signals_{&signal_1, &signals...}
     {
         static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANRXMessage.");
-        can_interface_.RegisterRXMessage(*this);
+        can_interface.RegisterRXMessage(*this);
     }
 
     template <typename... Ts>
