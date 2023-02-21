@@ -433,13 +433,21 @@ BO_ 576 BMS_SOE: 8 BMS
  SG_ Battery_Current : 48|16@1- (0.01,0) [-300|300] "A" Vector__XXX
 
 BO_ 592 BMS_Faults: 8 BMS
+ SG_ Fault_Summary : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Undervoltage_Fault : 1|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Overvoltage_Fault : 2|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Undertemperature_Fault : 3|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Overtemperature_Fault : 4|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Overcurrent_Fault : 5|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ External_Kill_Fault : 6|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 577 BMS_Status: 8 BMS
- SG_ Max_Cell_Temp : 0|8@1+ (1,-40) [0|100] "A" Vector__XXX
- SG_ Min_Cell_Temp : 8|8@1+ (1,-40) [0|100] "A" Vector__XXX
- SG_ Max_Cell_Voltage : 16|8@1+ (0.012,2) [0|5] "V" Vector__XXX
- SG_ Min_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
- SG_ BMS_SOC : 32|8@1+ (0.5,0) [0|100] "%" Vector__XXX
+ SG_ BMS_State : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Max_Cell_Temp : 8|8@1+ (1,-40) [0|100] "A" Vector__XXX
+ SG_ Min_Cell_Temp : 16|8@1+ (1,-40) [0|100] "A" Vector__XXX
+ SG_ Max_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
+ SG_ Min_Cell_Voltage : 32|8@1+ (0.012,2) [0|5] "V" Vector__XXX
+ SG_ BMS_SOC : 40|8@1+ (0.5,0) [0|100] "%" Vector__XXX
 
 BO_ 1057 Coolant: 2 Temp_Board
  SG_ Coolant_Flow : 0|16@1+ (0.01,0) [0|0] "L/min" Vector__XXX
@@ -499,4 +507,12 @@ BA_ "GenMsgCycleTime" BO_ 559 100;
 BA_ "GenMsgCycleTime" BO_ 576 10;
 BA_ "GenMsgCycleTime" BO_ 592 100;
 BA_ "GenMsgCycleTime" BO_ 577 100;
+VAL_ 592 Fault_Summary 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 Undervoltage_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 Overvoltage_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 Undertemperature_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 Overtemperature_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 Overcurrent_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 592 External_Kill_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 577 BMS_State 0 "Shutdown" 1 "Precharge" 2 "Active" 3 "Charging" 4 "Fault" ;
 
