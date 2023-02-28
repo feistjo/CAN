@@ -452,6 +452,9 @@ BO_ 577 BMS_Status: 8 BMS
 BO_ 1057 Coolant: 2 Temp_Board
  SG_ Coolant_Flow : 0|16@1+ (0.01,0) [0|0] "L/min" Vector__XXX
 
+BO_ 578 BMS_CMD: 8 Vector__XXX
+ SG_ BMS_Command : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
 
 
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
@@ -515,4 +518,5 @@ VAL_ 592 Overtemperature_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 592 Overcurrent_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 592 External_Kill_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 577 BMS_State 0 "Shutdown" 1 "Precharge" 2 "Active" 3 "Charging" 4 "Fault" ;
+VAL_ 578 BMS_Command 0 "kNoAction" 1 "kPrechargeAndCloseContactors" 2 "kShutdown" ;
 
