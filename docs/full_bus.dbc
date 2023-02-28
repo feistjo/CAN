@@ -518,5 +518,5 @@ VAL_ 592 Overtemperature_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 592 Overcurrent_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 592 External_Kill_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 577 BMS_State 0 "Shutdown" 1 "Precharge" 2 "Active" 3 "Charging" 4 "Fault" ;
-VAL_ 578 BMS_Command 0 "kNoAction" 1 "kPrechargeAndCloseContactors" 2 "kShutdown" ;
+VAL_ 578 BMS_Command 0 "NoAction" 1 "PrechargeAndCloseContactors" 2 "Shutdown" ;
 
