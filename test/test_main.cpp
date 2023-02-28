@@ -83,6 +83,25 @@ void TypedCanSignalTest(void)
     TEST_ASSERT_EQUAL_HEX64(0xFF, test_buf);
 }
 
+void EnumClassSignalTest(void)
+{
+    enum class TestEnum : uint8_t
+    {
+        kT1 = 0,
+        kT2 = 0xFF,
+        kT3 = 1
+    };
+    CANSignal<TestEnum, 0, 8, CANTemplateConvertFloat(1), 0> test_signal;
+    test_signal = TestEnum::kT1;
+    uint64_t test_buf{0};
+    test_signal.EncodeSignal(&test_buf);
+    TEST_ASSERT_EQUAL_HEX64(0, test_buf);
+    test_signal = TestEnum::kT2;
+    TEST_ASSERT(test_signal == TestEnum::kT2);
+    test_signal.EncodeSignal(&test_buf);
+    TEST_ASSERT_EQUAL_HEX64(0xFF, test_buf);
+}
+
 int runUnityTests(void)
 {
     UNITY_BEGIN();
@@ -90,6 +109,7 @@ int runUnityTests(void)
     RUN_TEST(BigEndianCanSignalTest);
     RUN_TEST(SignedCanSignalTest);
     RUN_TEST(TypedCanSignalTest);
+    RUN_TEST(EnumClassSignalTest);
     return UNITY_END();
 }
 
