@@ -442,7 +442,7 @@ BO_ 592 BMS_Faults: 8 BMS
  SG_ External_Kill_Fault : 6|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 577 BMS_Status: 8 BMS
- SG_ BMS_State : 48|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ BMS_State : 0|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ Max_Cell_Temp : 8|8@1+ (1,-40) [0|100] "A" Vector__XXX
  SG_ Min_Cell_Temp : 16|8@1+ (1,-40) [0|100] "A" Vector__XXX
  SG_ Max_Cell_Voltage : 24|8@1+ (0.012,2) [0|5] "V" Vector__XXX
