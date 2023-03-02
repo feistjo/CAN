@@ -13,7 +13,7 @@ public:
      * @param tx The CAN TX pin
      * @param rx The CAN RX pin
      */
-    ESPCAN(gpio_num_t tx = gpio_num_t::GPIO_NUM_5, gpio_num_t rx = gpio_num_t::GPIO_NUM_4);
+    ESPCAN(uint8_t rx_queue_size = 10, gpio_num_t tx = gpio_num_t::GPIO_NUM_5, gpio_num_t rx = gpio_num_t::GPIO_NUM_4);
 
     void Initialize(BaudRate baud) override;
 
@@ -54,4 +54,5 @@ public:
 
 private:
     static std::vector<ICANRXMessage *> rx_messages_;
+    const uint8_t kRxQueueSize;
 };
