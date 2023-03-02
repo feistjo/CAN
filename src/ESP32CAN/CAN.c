@@ -38,7 +38,7 @@
 #include "CAN_config.h"
 #include "can_regdef.h"
 #include "driver/gpio.h"
-#include "esp_intr.h"
+#include "esp_intr_alloc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "soc/dport_reg.h"
