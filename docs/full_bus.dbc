@@ -455,6 +455,9 @@ BO_ 1057 Coolant: 2 Temp_Board
 BO_ 578 BMS_CMD: 8 Vector__XXX
  SG_ BMS_Command : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
+BO_ 769 Throttle_Status: 8 E_Throttle
+ SG_ Tractive_System_Status : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
 
 
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
@@ -519,4 +522,5 @@ VAL_ 592 Overcurrent_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 592 External_Kill_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 577 BMS_State 0 "Shutdown" 1 "Precharge" 2 "Active" 3 "Charging" 4 "Fault" ;
 VAL_ 578 BMS_Command 0 "NoAction" 1 "PrechargeAndCloseContactors" 2 "Shutdown" ;
+VAL_ 769 Tractive_System_Status 0 "Off" 1 "Neutral" 2 "Drive" 3 "Fault_Drive" ;
 
