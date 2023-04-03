@@ -218,11 +218,27 @@ public:
     void operator=(const SignalType &signal) { ITypedCANSignal<SignalType>::operator=(signal); }
 };
 
-// Macros for making signed and unsigned little-endian CAN signals
+// Macros for making signed and unsigned CAN signals, default little-endian
+#define MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                     \
+              position,                                                                       \
+              length,                                                                         \
+              CANTemplateConvertFloat(factor),                                                \
+              CANTemplateConvertFloat(offset),                                                \
+              false,                                                                          \
+              byte_order>
+#define MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                   \
+              position,                                                                     \
+              length,                                                                       \
+              CANTemplateConvertFloat(factor),                                              \
+              CANTemplateConvertFloat(offset),                                              \
+              true,                                                                         \
+              byte_order>
 #define MakeUnsignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset)>
+    MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 #define MakeSignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset), true>
+    MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 
 class ICANTXMessage
 {

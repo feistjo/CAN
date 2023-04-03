@@ -59,7 +59,8 @@ void SignedCanSignalTest(void)
 
 void BigEndianCanSignalTest(void)
 {
-    CANSignal<uint16_t, 0, 16, CANTemplateConvertFloat(1), 0, false, ICANSignal::ByteOrder::kBigEndian> test_signal;
+    // CANSignal<uint16_t, 0, 16, CANTemplateConvertFloat(1), 0, false, ICANSignal::ByteOrder::kBigEndian> test_signal;
+    MakeEndianUnsignedCANSignal(uint16_t, 0, 16, 1, 0, ICANSignal::ByteOrder::kBigEndian) test_signal;
     test_signal = 0xFF00;
     uint64_t test_buf{0};
     test_signal.EncodeSignal(&test_buf);
