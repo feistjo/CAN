@@ -36,10 +36,48 @@ public:
     virtual void DecodeSignal(uint64_t *buffer) = 0;
 };
 
-// Generates a mask of which bits in the message correspond to a specific signal
-constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
+template <class T>
+constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i, T j = 0u, std::size_t n = 0u)
 {
-    return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
+    return n == sizeof(T) ? j : bswap<T>(i >> CHAR_BIT, (j << CHAR_BIT) | (i & (T)(unsigned char)(-1)), n + 1);
+}
+
+constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+    {
+        return position;
+    }
+    else
+    {
+        uint8_t bits_in_last_byte = 8 - (position % 8);
+        if (length - bits_in_last_byte < 0)
+        {
+            return position;
+        }
+        else
+        {
+            uint8_t full_bytes = (length - bits_in_last_byte) / 8;
+            uint8_t remaining_bits = (length - bits_in_last_byte) % 8;
+            position -=
+                (8 * (remaining_bits == 0 ? full_bytes : full_bytes + 1)) + (8 - remaining_bits) - bits_in_last_byte;
+        }
+
+        return position;
+    }
+}
+
+// Generates a mask of which bits in the message correspond to a specific signal
+constexpr uint64_t CANSignal_generate_mask(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+    {
+        return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
+    }
+    else
+    {
+        return bswap((uint64_t)(0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position))));
+    }
 }
 
 template <typename SignalType>
@@ -100,13 +138,14 @@ struct GetCANRawType<false>
  * @tparam unity_factor This is calculated for you by default
  */
 template <typename SignalType,
-          uint8_t position,
+          uint8_t input_position,
           uint8_t length,
           int factor,
           int offset,
           bool signed_raw = false,
           ICANSignal::ByteOrder byte_order = ICANSignal::ByteOrder::kLittleEndian,
-          uint64_t mask = generate_mask(position, length),
+          uint8_t position = CANSignal_generate_position(input_position, length, byte_order),
+          uint64_t mask = CANSignal_generate_mask(position, length, byte_order),
           bool unity_factor = factor == CANTemplateConvertFloat(1)
                               && offset == 0>  // unity_factor is used for increased precision on unity-factor 64-bit
                                                // signals by getting rid of floating point error
@@ -136,7 +175,18 @@ public:
                 temp_reversed_buffer};  // intermediate as void* to get rid of strict aliasing compiler warnings
             *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) |=
                 (static_cast<underlying_type>(this->signal_) << (64 - (position + length)));
+            for (int i = 0; i < 8; i++)
+                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(temp_reversed_buffer[i]) << " ";
+            std::cout << std::endl;
             std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
+            for (int i = 0; i < 8; i++)
+                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(temp_reversed_buffer[i]) << " ";
+            std::cout << std::endl;
+            uint64_t msk = mask;
+            for (int i = 0; i < 8; i++)
+                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(((uint8_t *)(&msk))[i]) << " ";
+            std::cout << std::endl;
+            std::cout << std::endl;
             *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) & mask;
         }
     }
