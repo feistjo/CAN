@@ -44,40 +44,47 @@ constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i
 
 constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
 {
-    if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
-    {
-        return position;
-    }
-    else
-    {
-        uint8_t bits_in_last_byte = 8 - (position % 8);
-        if (length - bits_in_last_byte < 0)
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian
+            || (length - (8 - (position % 8)) /* bits_in_last_byte */ < 0))
+               ? position
+               : position
+                     - ((8
+                         * (((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */ == 0
+                                ? ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */
+                                : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
+                        + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
+                        - (8 - (position % 8)) /* bits_in_last_byte */);
+    /*
+        if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
         {
             return position;
         }
         else
         {
-            uint8_t full_bytes = (length - bits_in_last_byte) / 8;
-            uint8_t remaining_bits = (length - bits_in_last_byte) % 8;
-            position -=
-                (8 * (remaining_bits == 0 ? full_bytes : full_bytes + 1)) + (8 - remaining_bits) - bits_in_last_byte;
-        }
+            uint8_t bits_in_last_byte{8 - (position % 8)};
+            if (length - bits_in_last_byte < 0)
+            {
+                return position;
+            }
+            else
+            {
+                uint8_t full_bytes = (length - bits_in_last_byte) / 8;
+                uint8_t remaining_bits = (length - bits_in_last_byte) % 8;
+                position -=
+                    (8 * (remaining_bits == 0 ? full_bytes : full_bytes + 1)) + (8 - remaining_bits) -
+       bits_in_last_byte;
+            }
 
-        return position;
-    }
+            return position;
+        } */
 }
 
 // Generates a mask of which bits in the message correspond to a specific signal
 constexpr uint64_t CANSignal_generate_mask(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
 {
-    if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
-    {
-        return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
-    }
-    else
-    {
-        return bswap((uint64_t)(0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position))));
-    }
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+               ? (0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position)))
+               : (bswap((uint64_t)(0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position)))));
 }
 
 template <typename SignalType>
@@ -175,18 +182,7 @@ public:
                 temp_reversed_buffer};  // intermediate as void* to get rid of strict aliasing compiler warnings
             *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) |=
                 (static_cast<underlying_type>(this->signal_) << (64 - (position + length)));
-            for (int i = 0; i < 8; i++)
-                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(temp_reversed_buffer[i]) << " ";
-            std::cout << std::endl;
             std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
-            for (int i = 0; i < 8; i++)
-                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(temp_reversed_buffer[i]) << " ";
-            std::cout << std::endl;
-            uint64_t msk = mask;
-            for (int i = 0; i < 8; i++)
-                std::cout << std::hex << std::setfill('0') << std::setw(2) << uint16_t(((uint8_t *)(&msk))[i]) << " ";
-            std::cout << std::endl;
-            std::cout << std::endl;
             *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) & mask;
         }
     }
