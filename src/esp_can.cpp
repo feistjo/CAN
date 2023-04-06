@@ -40,7 +40,7 @@ void ESPCAN::Initialize(BaudRate baud)
 bool ESPCAN::SendMessage(CANMessage &msg)
 {
     CAN_frame_t tx_frame;
-    tx_frame.FIR.B.FF = CAN_frame_std;
+    tx_frame.FIR.B.FF = msg.extended_id_ ? CAN_frame_ext : CAN_frame_std;
     tx_frame.FIR.B.RTR = CAN_no_RTR;
     bool ret = false;
 

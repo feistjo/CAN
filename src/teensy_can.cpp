@@ -61,6 +61,7 @@ bool TeensyCAN<bus_num>::SendMessage(CANMessage &msg)
 {
     CAN_message_t msg_t;
     msg_t.id = msg.id_;
+    msg_t.flags.extended = msg.extended_id_;
     msg_t.len = msg.len_;
 
     for (int i = 0; i < 8; i++)
