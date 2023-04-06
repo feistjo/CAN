@@ -39,7 +39,7 @@ public:
 template <class T>
 constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i, T j = 0u, std::size_t n = 0u)
 {
-    return n == sizeof(T) ? j : bswap<T>(i >> CHAR_BIT, (j << CHAR_BIT) | (i & (T)(unsigned char)(-1)), n + 1);
+    return n == sizeof(T) ? j : bswap<T>(i >> 8, (j << 8) | (i & (T)(unsigned char)(-1)), n + 1);
 }
 
 constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
