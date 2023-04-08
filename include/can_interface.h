@@ -43,10 +43,55 @@ public:
     virtual void DecodeSignal(uint64_t *buffer) = 0;
 };
 
-// Generates a mask of which bits in the message correspond to a specific signal
-constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
+template <class T>
+constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i, T j = 0u, std::size_t n = 0u)
 {
-    return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
+    return n == sizeof(T) ? j : bswap<T>(i >> 8, (j << 8) | (i & (T)(unsigned char)(-1)), n + 1);
+}
+
+constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian
+            || (length - (8 - (position % 8)) /* bits_in_last_byte */ < 0))
+               ? position
+               : position
+                     - ((8
+                         * (((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */ == 0
+                                ? ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */
+                                : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
+                        + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
+                        - (8 - (position % 8)) /* bits_in_last_byte */);
+    /*
+        if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+        {
+            return position;
+        }
+        else
+        {
+            uint8_t bits_in_last_byte{8 - (position % 8)};
+            if (length - bits_in_last_byte < 0)
+            {
+                return position;
+            }
+            else
+            {
+                uint8_t full_bytes = (length - bits_in_last_byte) / 8;
+                uint8_t remaining_bits = (length - bits_in_last_byte) % 8;
+                position -=
+                    (8 * (remaining_bits == 0 ? full_bytes : full_bytes + 1)) + (8 - remaining_bits) -
+       bits_in_last_byte;
+            }
+
+            return position;
+        } */
+}
+
+// Generates a mask of which bits in the message correspond to a specific signal
+constexpr uint64_t CANSignal_generate_mask(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+               ? (0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position)))
+               : (bswap((uint64_t)(0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position)))));
 }
 
 template <typename SignalType>
@@ -107,13 +152,14 @@ struct GetCANRawType<false>
  * @tparam unity_factor This is calculated for you by default
  */
 template <typename SignalType,
-          uint8_t position,
+          uint8_t input_position,
           uint8_t length,
           int factor,
           int offset,
           bool signed_raw = false,
           ICANSignal::ByteOrder byte_order = ICANSignal::ByteOrder::kLittleEndian,
-          uint64_t mask = generate_mask(position, length),
+          uint8_t position = CANSignal_generate_position(input_position, length, byte_order),
+          uint64_t mask = CANSignal_generate_mask(position, length, byte_order),
           bool unity_factor = factor == CANTemplateConvertFloat(1)
                               && offset == 0>  // unity_factor is used for increased precision on unity-factor 64-bit
                                                // signals by getting rid of floating point error
@@ -225,11 +271,27 @@ public:
     void operator=(const SignalType &signal) { ITypedCANSignal<SignalType>::operator=(signal); }
 };
 
-// Macros for making signed and unsigned little-endian CAN signals
+// Macros for making signed and unsigned CAN signals, default little-endian
+#define MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                     \
+              position,                                                                       \
+              length,                                                                         \
+              CANTemplateConvertFloat(factor),                                                \
+              CANTemplateConvertFloat(offset),                                                \
+              false,                                                                          \
+              byte_order>
+#define MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                   \
+              position,                                                                     \
+              length,                                                                       \
+              CANTemplateConvertFloat(factor),                                              \
+              CANTemplateConvertFloat(offset),                                              \
+              true,                                                                         \
+              byte_order>
 #define MakeUnsignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset)>
+    MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 #define MakeSignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset), true>
+    MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 
 class ICANTXMessage
 {
