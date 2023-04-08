@@ -36,13 +36,13 @@ BS_:
 BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle
 
 
-BO_ 1024 FL_Wheel: 4 FL_Wheel
- SG_ FL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
- SG_ FL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
+BO_ 1024 FL_Wheel: 8 FL_Wheel
+ SG_ FL_Wheel_Speed : 7|16@0+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ FL_Brake_Temperature : 16|16@0+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1025 FR_Wheel: 4 FR_Wheel
- SG_ FR_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
- SG_ FR_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
+ SG_ FR_Wheel_Speed : 7|16@0+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ FR_Brake_Temperature : 23|16@0+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1026 BL_Wheel: 4 BL_Wheel
  SG_ BL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
@@ -418,12 +418,12 @@ BO_ 559 BMS_Temperatures_15: 8 BMS
  SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
  SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
-BO_ 768 Throttle_Torque: 2 E_Throttle
- SG_ Motor_Torque : 0|16@1- (1,0) [0|0] "N*m" Vector__XXX
+BO_ 768 Throttle_Values: 2 E_Throttle
+ SG_ Accel_Percentage : 0|8@1- (1,0) [0|0] "" Vector__XXX
+ SG_ Brake_Percentage : 8|8@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 1040 Brake_Pressure: 4 Brake_Pressure
+BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
- SG_ Back_Brake_Pressure : 16|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 576 BMS_SOE: 8 BMS
  SG_ Max_Discharge_Current : 0|12@1+ (0.1,0) [0|300] "A" Vector__XXX
@@ -457,6 +457,9 @@ BO_ 578 BMS_CMD: 8 Vector__XXX
 
 BO_ 769 Throttle_Status: 8 E_Throttle
  SG_ Tractive_System_Status : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
+ SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 
 
