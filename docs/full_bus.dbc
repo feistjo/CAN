@@ -36,13 +36,13 @@ BS_:
 BU_: FL_Wheel FR_Wheel BL_Wheel BR_Wheel Brake_Pressure Temp_Board Motion_Board Logger_Board BMS E_Throttle
 
 
-BO_ 1024 FL_Wheel: 8 FL_Wheel
- SG_ FL_Wheel_Speed : 7|16@0+ (0.1,0) [0|0] "mph" Vector__XXX
- SG_ FL_Brake_Temperature : 16|16@0+ (0.1,-40) [0|0] "C" Vector__XXX
+BO_ 1024 FL_Wheel: 4 FL_Wheel
+ SG_ FL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ FL_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1025 FR_Wheel: 4 FR_Wheel
- SG_ FR_Wheel_Speed : 7|16@0+ (0.1,0) [0|0] "mph" Vector__XXX
- SG_ FR_Brake_Temperature : 23|16@0+ (0.1,-40) [0|0] "C" Vector__XXX
+ SG_ FR_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
+ SG_ FR_Brake_Temperature : 16|16@1+ (0.1,-40) [0|0] "C" Vector__XXX
 
 BO_ 1026 BL_Wheel: 4 BL_Wheel
  SG_ BL_Wheel_Speed : 0|16@1+ (0.1,0) [0|0] "mph" Vector__XXX
