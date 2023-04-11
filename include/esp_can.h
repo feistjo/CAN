@@ -40,7 +40,7 @@ public:
             {
                 msg_data[i] = rx_frame.data.u8[i];
             }
-            CANMessage received_message{static_cast<uint16_t>(msg_id), msg_len, msg_data};
+            CANMessage received_message{static_cast<uint32_t>(msg_id), msg_len, msg_data};
             for (size_t i = 0; i < rx_messages_.size(); i++)
             {
                 if (rx_messages_[i]->GetID() == received_message.id_)
