@@ -30,8 +30,7 @@ public:
         uint32_t msg_id;
         uint8_t msg_len;
 
-        if ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE)
-            && (rx_frame.FIR.B.FF == CAN_frame_std))
+        if ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE))
         {
             msg_id = rx_frame.MsgID;
             msg_len = rx_frame.FIR.B.DLC;
