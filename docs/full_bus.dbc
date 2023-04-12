@@ -71,8 +71,8 @@ BO_ 1074 Gyroscope: 6 Motion_Board
  SG_ Gyro_Y : 16|16@1- (0.0005,0) [0|0] "rad/s" Vector__XXX
  SG_ Gyro_Z : 32|16@1- (0.0005,0) [0|0] "rad/s" Vector__XXX
 
-BO_ 1088 RTC: 8 Logger_Board
- SG_ RTC : 0|64@1+ (10,0) [0|0] "ms" Vector__XXX
+BO_ 1088 RTC: 4 Logger_Board
+ SG_ RTC : 0|32@1+ (1,0) [0|0] "s" Vector__XXX
 
 BO_ 512 BMS_Voltages_0: 8 BMS
  SG_ Cell_V_0 : 0|8@1+ (0.012,2) [0|0] "V" Vector__XXX
@@ -418,12 +418,12 @@ BO_ 559 BMS_Temperatures_15: 8 BMS
  SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
  SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
-BO_ 768 Throttle_Torque: 2 E_Throttle
- SG_ Motor_Torque : 0|16@1- (1,0) [0|0] "N*m" Vector__XXX
+BO_ 768 Throttle_Values: 2 E_Throttle
+ SG_ Accel_Percentage : 0|8@1- (1,0) [0|0] "" Vector__XXX
+ SG_ Brake_Percentage : 8|8@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 1040 Brake_Pressure: 4 Brake_Pressure
+BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
- SG_ Back_Brake_Pressure : 16|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 BO_ 576 BMS_SOE: 8 BMS
  SG_ Max_Discharge_Current : 0|12@1+ (0.1,0) [0|300] "A" Vector__XXX
@@ -458,8 +458,12 @@ BO_ 578 BMS_CMD: 8 Vector__XXX
 BO_ 769 Throttle_Status: 8 E_Throttle
  SG_ Tractive_System_Status : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
+BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
+ SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
 
+
+CM_ SG_ 1088 RTC "seconds since Jan 1 2000 12AM";
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
 BA_DEF_ BO_  "GenMsgBackgroundColor" STRING ;
 BA_DEF_ BO_  "GenMsgForegroundColor" STRING ;
