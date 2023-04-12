@@ -360,7 +360,7 @@ public:
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
           signals_{&signals...}
     {
-        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANTXMessage.");
     }
 
     template <typename... Ts>
@@ -376,7 +376,7 @@ public:
      */
     CANTXMessage(
         ICAN &can_interface, uint32_t id, uint8_t length, uint32_t period, ICANSignal &signal_1, Ts &...signals)
-        : CANTXMessage(&can_interface, id, false, length, period, signals...)
+        : CANTXMessage(&can_interface, id, false, length, period, signal_1, signals...)
     {
     }
 
@@ -401,7 +401,7 @@ public:
                  VirtualTimerGroup &timer_group,
                  ICANSignal &signal_1,
                  Ts &...signals)
-        : CANTXMessage(can_interface, id, extended_id, length, period, signals...)
+        : CANTXMessage(can_interface, id, extended_id, length, period, signal_1, signals...)
     {
         timer_group.AddTimer(transmit_timer_);
     }
@@ -426,7 +426,7 @@ public:
                  VirtualTimerGroup &timer_group,
                  ICANSignal &signal_1,
                  Ts &...signals)
-        : CANTXMessage(can_interface, id, false, length, period, timer_group, signals...)
+        : CANTXMessage(can_interface, id, false, length, period, timer_group, signal_1, signals...)
     {
     }
 
@@ -436,7 +436,7 @@ public:
         can_interface_.SendMessage(message_);
     }
 
-    uint16_t GetID() { return message_.id_; }
+    uint32_t GetID() { return message_.id_; }
 
     VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
 
