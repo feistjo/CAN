@@ -63,8 +63,7 @@ void ESPCAN::Tick()
     CANMessage received_message{0, 8, msg_data};
     CAN_frame_t rx_frame;
 
-    while ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE)
-           && (rx_frame.FIR.B.FF == CAN_frame_std))
+    while ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE))
     {
         received_message.id_ = rx_frame.MsgID;
         received_message.len_ = rx_frame.FIR.B.DLC;
