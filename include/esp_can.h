@@ -30,8 +30,7 @@ public:
         uint32_t msg_id;
         uint8_t msg_len;
 
-        if ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE)
-            && (rx_frame.FIR.B.FF == CAN_frame_std))
+        if ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE))
         {
             msg_id = rx_frame.MsgID;
             msg_len = rx_frame.FIR.B.DLC;
@@ -40,7 +39,7 @@ public:
             {
                 msg_data[i] = rx_frame.data.u8[i];
             }
-            CANMessage received_message{static_cast<uint16_t>(msg_id), msg_len, msg_data};
+            CANMessage received_message{static_cast<uint32_t>(msg_id), msg_len, msg_data};
             for (size_t i = 0; i < rx_messages_.size(); i++)
             {
                 if (rx_messages_[i]->GetID() == received_message.id_)
