@@ -358,7 +358,7 @@ public:
         : can_interface_{can_interface},
           message_{id, extended_id, length, std::array<uint8_t, 8>()},
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
-          signals_{&signals...}
+          signals_{&signal_1, &signals...}
     {
         static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANTXMessage.");
     }
@@ -454,7 +454,7 @@ private:
         uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+            signals_.at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
         std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
