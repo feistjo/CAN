@@ -475,8 +475,6 @@ BO_ 1281 PDM_Misc: 5 PDM
  SG_ High_Side_Driver_1 : 24|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ High_Side_Driver_2 : 32|8@1+ (0.02,0) [0|0] "A" Vector__XXX
 
-
-
 CM_ SG_ 1088 RTC "seconds since Jan 1 2000 12AM";
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
 BA_DEF_ BO_  "GenMsgBackgroundColor" STRING ;
