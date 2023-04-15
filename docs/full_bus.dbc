@@ -461,14 +461,14 @@ BO_ 769 Throttle_Status: 8 E_Throttle
 BO_ 1041 Back_Brake_Pressure: 2 Brake_Pressure
  SG_ Back_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
 
-BO_ 1280 PDM_Vbats_Rails: 6 PDM
+BO_ 1280 PDM_Rails: 6 PDM
  SG_ V5_Rail : 0|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ V12_Rail : 8|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ Vbat_Rail : 16|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ Vbat_Input_Current : 24|16@1- (0.002,0) [0|0] "A" Vector__XXX
  SG_ Vbat_Input_Voltage : 32|8@1+ (0.05,10) [0|0] "V" Vector__XXX
 
-BO_ 1281 PDM_Misc: 5 PDM
+BO_ 1281 PDM_Devices: 5 PDM
  SG_ Air_Cooling_Fan : 0|8@1+ (0.1,0) [0|0] "A" Vector__XXX
  SG_ Liquid_Cooling_Fan : 8|8@1+ (0.1,0) [0|0] "A" Vector__XXX
  SG_ Liquid_Cooling_Pump : 16|8@1+ (0.1,0) [0|0] "A" Vector__XXX
