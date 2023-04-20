@@ -466,7 +466,7 @@ BO_ 1280 PDM_Rails: 6 PDM
  SG_ V12_Rail : 8|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ Vbat_Rail : 16|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ Vbat_Input_Current : 24|16@1- (0.002,0) [0|0] "A" Vector__XXX
- SG_ Vbat_Input_Voltage : 32|8@1+ (0.05,10) [0|0] "V" Vector__XXX
+ SG_ Vbat_Input_Voltage : 40|8@1+ (0.05,10) [0|0] "V" Vector__XXX
 
 BO_ 1281 PDM_Devices: 5 PDM
  SG_ Air_Cooling_Fan : 0|8@1+ (0.1,0) [0|0] "A" Vector__XXX
