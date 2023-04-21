@@ -11,15 +11,16 @@ def dbc_to_csv(dbc_file, csv_file):
         csv_writer = csv.writer(csvfile)
 
         # Write the header row
-        header = ['Message ID', 'Message Name', 'Signal Name', 'Start Bit', 'Size', 'Factor', 'Offset', 'Min', 'Max', 'Unit']
+        header = ['Message ID', 'Message Name', 'Sender', 'Signal Name', 'Start Bit', 'Size', 'Factor', 'Offset', 'Min', 'Max', 'Unit', 'Cycle Time']
         csv_writer.writerow(header)
 
         # Iterate over the messages and signals in the DBC file
         for message in db.messages:
             for signal in message.signals:
                 row = [
-                    message.frame_id,
+                    format(message.frame_id, 'x'),
                     message.name,
+                    message.senders,
                     signal.name,
                     signal.start,
                     signal.length,
@@ -27,7 +28,8 @@ def dbc_to_csv(dbc_file, csv_file):
                     signal.offset,
                     signal.minimum,
                     signal.maximum,
-                    signal.unit
+                    signal.unit,
+                    message.cycle_time
                 ]
                 csv_writer.writerow(row)
 
