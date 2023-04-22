@@ -475,6 +475,8 @@ BO_ 1281 PDM_Devices: 5 PDM
  SG_ High_Side_Driver_1 : 24|8@1+ (0.02,0) [0|0] "A" Vector__XXX
  SG_ High_Side_Driver_2 : 32|8@1+ (0.02,0) [0|0] "A" Vector__XXX
 
+
+
 CM_ SG_ 1088 RTC "seconds since Jan 1 2000 12AM";
 BA_DEF_ BO_  "GenMsgCycleTime" INT 0 10000;
 BA_DEF_ BO_  "GenMsgBackgroundColor" STRING ;
@@ -485,6 +487,9 @@ BA_DEF_DEF_  "GenMsgBackgroundColor" "#1e1e1e";
 BA_DEF_DEF_  "GenMsgForegroundColor" "#ffffff";
 BA_DEF_DEF_  "isj1939dbc" 0;
 BA_ "GenMsgCycleTime" BO_ 1024 10;
+BA_ "GenMsgCycleTime" BO_ 1025 10;
+BA_ "GenMsgCycleTime" BO_ 1026 10;
+BA_ "GenMsgCycleTime" BO_ 1027 10;
 BA_ "GenMsgCycleTime" BO_ 1056 100;
 BA_ "GenMsgCycleTime" BO_ 1072 100;
 BA_ "GenMsgCycleTime" BO_ 1073 10;

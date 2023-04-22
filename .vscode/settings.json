@@ -50,5 +50,7 @@
     "random": "cpp",
     "string_view": "cpp",
     "numbers": "cpp"
-  }
+  },
+  "nrf-connect.topdir": "${nrf-connect.sdk:2.2.0}",
+  "nrf-connect.toolchain.path": "${nrf-connect.toolchain:2.2.0}"
 }
