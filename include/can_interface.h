@@ -376,7 +376,7 @@ public:
      */
     CANTXMessage(
         ICAN &can_interface, uint32_t id, uint8_t length, uint32_t period, ICANSignal &signal_1, Ts &...signals)
-        : CANTXMessage(&can_interface, id, false, length, period, signal_1, signals...)
+        : CANTXMessage(can_interface, id, false, length, period, signal_1, signals...)
     {
     }
 
