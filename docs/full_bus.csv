@@ -306,6 +306,7 @@ Message ID,Message Name,Sender,Signal Name,Start Bit,Size,Factor,Offset,Min,Max,
 250,BMS_Faults,['BMS'],Overtemperature_Fault,4,1,1,0,,,,100
 250,BMS_Faults,['BMS'],Overcurrent_Fault,5,1,1,0,,,,100
 250,BMS_Faults,['BMS'],External_Kill_Fault,6,1,1,0,,,,100
+250,BMS_Faults,['BMS'],Open_Wire_Fault,7,1,1,0,,,,100
 241,BMS_Status,['BMS'],BMS_State,0,8,1,0,,,,100
 241,BMS_Status,['BMS'],Max_Cell_Temp,8,8,1,-40,0,100,A,100
 241,BMS_Status,['BMS'],Min_Cell_Temp,16,8,1,-40,0,100,A,100
