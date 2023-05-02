@@ -293,6 +293,7 @@ Message ID,Message Name,Sender,Signal Name,Start Bit,Size,Factor,Offset,Min,Max,
 22f,BMS_Temperatures_15,['BMS'],Cell_T_111,48,8,1,-40,,,C,100
 300,Throttle_Values,['E_Throttle'],Accel_Percentage,0,8,1,0,,,,
 300,Throttle_Values,['E_Throttle'],Brake_Percentage,8,8,1,0,,,,
+300,Throttle_Values,['E_Throttle'],Torque_Limit_Percentage,16,8,1,0,,,,
 410,Front_Brake_Pressure,['Brake_Pressure'],Front_Brake_Pressure,0,16,1,0,,,psi,
 240,BMS_SOE,['BMS'],Max_Discharge_Current,0,12,0.1,0,0,300,A,10
 240,BMS_SOE,['BMS'],Max_Regen_Current,12,12,0.1,0,0,300,A,10
