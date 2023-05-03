@@ -40,9 +40,11 @@ public:
 
     bool SendMessage(CANMessage &msg)
     {
-        StandardCANMessageStruct msg_struct{
-            0, msg.id_, 0, 0, 0, msg.len_, *reinterpret_cast<uint64_t *>(msg.data_.data()), 0, 1, 0, 1, 0x7F, 0x7};
-        Serial.printf("%03x%01x%016lx\n", msg_struct.ID, msg_struct.DLC, msg_struct.DATA);
+        uint64_t data = 0;
+        std::copy(msg.data_.begin(), msg.data_.end(), reinterpret_cast<uint8_t *>(&data));
+        StandardCANMessageStruct msg_struct{0, msg.id_, 0, 0, 0, msg.len_, data, 0, 1, 0, 1, 0x7F, 0x7};
+        Serial.printf("%03x%01x%016llx\n", msg_struct.ID, msg_struct.DLC, msg_struct.DATA);
+        return false;
     }
 
     void RegisterRXMessage(ICANRXMessage &msg) override { rx_messages_.push_back(&msg); }
@@ -55,12 +57,22 @@ public:
             char read = Serial.read();
             if (read == '\n')
             {
+                Serial.println("Got message!");
                 std::array<uint8_t, 8> msg_data{};
+                uint64_t data = 0;
                 CANMessage received_message{0, 8, msg_data};
                 sscanf(in.substr(0, 3).c_str(), "%03x", &(received_message.id_));
                 sscanf(in.substr(3, 1).c_str(), "%01x", &(received_message.len_));
-                sscanf(in.substr(4, 16).c_str(), "%016lx", reinterpret_cast<uint64_t *>(msg_data.data()));
+                sscanf(in.substr(4, 16).c_str(), "%016llx", &data);
+                for (int i = 0; i < 8; i++)
+                {
+                    received_message.data_[i] = data >> (8 * i);
+                }
                 in = "";
+                Serial.printf("ID: %03x, len: %01x, data: %016llx\n",
+                              received_message.id_,
+                              received_message.len_,
+                              *reinterpret_cast<uint64_t *>(received_message.data_.data()));
                 for (size_t i = 0; i < rx_messages_.size(); i++)
                 {
                     if (rx_messages_[i]->GetID() == received_message.id_)
