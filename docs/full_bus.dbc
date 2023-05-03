@@ -415,9 +415,10 @@ BO_ 559 BMS_Temperatures_15: 8 BMS
    SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
    SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
-BO_ 768 Throttle_Values: 2 E_Throttle
-   SG_ Accel_Percentage : 0|8@1- (1,0) [0|0] "" Vector__XXX
-   SG_ Brake_Percentage : 8|8@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 768 Throttle_Values: 3 E_Throttle
+ SG_ Accel_Percentage : 0|8@1- (1,0) [0|0] "" Vector__XXX
+ SG_ Brake_Percentage : 8|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Torque_Limit_Percentage : 16|8@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 1040 Front_Brake_Pressure: 2 Brake_Pressure
    SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
