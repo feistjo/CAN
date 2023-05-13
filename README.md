@@ -10,7 +10,9 @@ If you don't know what CAN is, read this document [here](https://docs.google.com
 
 This project requires VS Code's PlatformIO extension to work. If you aren't familiar with PlatformIO or VS Code, see this setup tutorial [here](https://docs.google.com/document/d/1lHxgOpmPJfi5fyBfCM1aA54dtm3wqHcFUew8G-NeXwE/edit?usp=sharing)
 
-To read the CAN database (DBC file), use [Kvaser Database Editor 3](https://www.kvaser.com/download/)
+To read and edit the CAN database (DBC file), use [Kvaser Database Editor 3](https://www.kvaser.com/download/)
+
+If you only need to view the database, we have a GitHub Actions workflow that creates a .csv file in the docs/ folder which is automatically updated from the .dbc file
 
 ### Coverage
 

@@ -17,9 +17,16 @@
 class CANMessage
 {
 public:
-    CANMessage(uint16_t id, uint8_t len, std::array<uint8_t, 8> data) : id_{id}, len_{len}, data_{data} {}
+    CANMessage(uint32_t id, bool extended_id, uint8_t len, std::array<uint8_t, 8> data)
+        : id_{id}, extended_id_{extended_id}, len_{len}, data_{data}
+    {
+    }
 
-    uint16_t id_;
+    // default to standard id for backwards compatibility
+    CANMessage(uint32_t id, uint8_t len, std::array<uint8_t, 8> data) : CANMessage(id, false, len, data) {}
+
+    uint32_t id_;
+    bool extended_id_;
     uint8_t len_;
     std::array<uint8_t, 8> data_;
 };
@@ -36,10 +43,55 @@ public:
     virtual void DecodeSignal(uint64_t *buffer) = 0;
 };
 
-// Generates a mask of which bits in the message correspond to a specific signal
-constexpr uint64_t generate_mask(uint8_t position, uint8_t length)
+template <class T>
+constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i, T j = 0u, std::size_t n = 0u)
 {
-    return 0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position));
+    return n == sizeof(T) ? j : bswap<T>(i >> 8, (j << 8) | (i & (T)(unsigned char)(-1)), n + 1);
+}
+
+constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian
+            || (length - (8 - (position % 8)) /* bits_in_last_byte */ < 0))
+               ? position
+               : position
+                     - ((8
+                         * (((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */ == 0
+                                ? ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */
+                                : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
+                        + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
+                        - (8 - (position % 8)) /* bits_in_last_byte */);
+    /*
+        if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+        {
+            return position;
+        }
+        else
+        {
+            uint8_t bits_in_last_byte{8 - (position % 8)};
+            if (length - bits_in_last_byte < 0)
+            {
+                return position;
+            }
+            else
+            {
+                uint8_t full_bytes = (length - bits_in_last_byte) / 8;
+                uint8_t remaining_bits = (length - bits_in_last_byte) % 8;
+                position -=
+                    (8 * (remaining_bits == 0 ? full_bytes : full_bytes + 1)) + (8 - remaining_bits) -
+       bits_in_last_byte;
+            }
+
+            return position;
+        } */
+}
+
+// Generates a mask of which bits in the message correspond to a specific signal
+constexpr uint64_t CANSignal_generate_mask(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
+{
+    return (byte_order == ICANSignal::ByteOrder::kLittleEndian)
+               ? (0xFFFFFFFFFFFFFFFFull << (64 - length) >> (64 - (length + position)))
+               : (bswap((uint64_t)(0xFFFFFFFFFFFFFFFFull >> (64 - length) << (64 - (length + position)))));
 }
 
 template <typename SignalType>
@@ -100,13 +152,14 @@ struct GetCANRawType<false>
  * @tparam unity_factor This is calculated for you by default
  */
 template <typename SignalType,
-          uint8_t position,
+          uint8_t input_position,
           uint8_t length,
           int factor,
           int offset,
           bool signed_raw = false,
           ICANSignal::ByteOrder byte_order = ICANSignal::ByteOrder::kLittleEndian,
-          uint64_t mask = generate_mask(position, length),
+          uint8_t position = CANSignal_generate_position(input_position, length, byte_order),
+          uint64_t mask = CANSignal_generate_mask(position, length, byte_order),
           bool unity_factor = factor == CANTemplateConvertFloat(1)
                               && offset == 0>  // unity_factor is used for increased precision on unity-factor 64-bit
                                                // signals by getting rid of floating point error
@@ -218,16 +271,32 @@ public:
     void operator=(const SignalType &signal) { ITypedCANSignal<SignalType>::operator=(signal); }
 };
 
-// Macros for making signed and unsigned little-endian CAN signals
+// Macros for making signed and unsigned CAN signals, default little-endian
+#define MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                     \
+              position,                                                                       \
+              length,                                                                         \
+              CANTemplateConvertFloat(factor),                                                \
+              CANTemplateConvertFloat(offset),                                                \
+              false,                                                                          \
+              byte_order>
+#define MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, byte_order) \
+    CANSignal<SignalType,                                                                   \
+              position,                                                                     \
+              length,                                                                       \
+              CANTemplateConvertFloat(factor),                                              \
+              CANTemplateConvertFloat(offset),                                              \
+              true,                                                                         \
+              byte_order>
 #define MakeUnsignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset)>
+    MakeEndianUnsignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 #define MakeSignedCANSignal(SignalType, position, length, factor, offset) \
-    CANSignal<SignalType, position, length, CANTemplateConvertFloat(factor), CANTemplateConvertFloat(offset), true>
+    MakeEndianSignedCANSignal(SignalType, position, length, factor, offset, ICANSignal::ByteOrder::kLittleEndian)
 
 class ICANTXMessage
 {
 public:
-    virtual uint16_t GetID() = 0;
+    virtual uint32_t GetID() = 0;
     virtual VirtualTimer &GetTransmitTimer() = 0;
     virtual void EncodeSignals() = 0;
     virtual void EncodeAndSend() = 0;
@@ -236,7 +305,7 @@ public:
 class ICANRXMessage
 {
 public:
-    virtual uint16_t GetID() = 0;
+    virtual uint32_t GetID() = 0;
     virtual void DecodeSignals(CANMessage message) = 0;
 };
 
@@ -251,7 +320,7 @@ public:
         kBaud125k = 125000
     };
 
-    virtual void Initialize(BaudRate baud);
+    virtual void Initialize(BaudRate baud) = 0;
 
     virtual bool SendMessage(CANMessage &msg) = 0;
 
@@ -273,23 +342,74 @@ public:
      *
      * @param can_interface The ICAN object the message will be transmitted on
      * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
      * @param length The length in bytes of the message
      * @param period The transmit period in ms of the message
      * @param start_time The time in ms to start transmitting the message
      * @param signals The ICANSignals contained in the message
      */
-    CANTXMessage(ICAN &can_interface, uint16_t id, uint8_t length, uint32_t period, Ts &...signals)
+    CANTXMessage(ICAN &can_interface,
+                 uint32_t id,
+                 bool extended_id,
+                 uint8_t length,
+                 uint32_t period,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
         : can_interface_{can_interface},
-          message_{id, length, std::array<uint8_t, 8>()},
+          message_{id, extended_id, length, std::array<uint8_t, 8>()},
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
-          signals_{&signals...}
+          signals_{&signal_1, &signals...}
     {
-        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into CANTXMessage.");
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANTXMessage.");
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object, default to standard id
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(
+        ICAN &can_interface, uint32_t id, uint8_t length, uint32_t period, ICANSignal &signal_1, Ts &...signals)
+        : CANTXMessage(can_interface, id, false, length, period, signal_1, signals...)
+    {
     }
 
     template <typename... Ts>
     /**
      * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param signals The ICANSignals contained in the message
+     */
+    CANTXMessage(ICAN &can_interface,
+                 uint32_t id,
+                 bool extended_id,
+                 uint8_t length,
+                 uint32_t period,
+                 VirtualTimerGroup &timer_group,
+                 ICANSignal &signal_1,
+                 Ts &...signals)
+        : CANTXMessage(can_interface, id, extended_id, length, period, signal_1, signals...)
+    {
+        timer_group.AddTimer(transmit_timer_);
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup, default to standard
+     * id
      *
      * @param can_interface The ICAN object the message will be transmitted on
      * @param id The ID of the CAN message
@@ -300,14 +420,14 @@ public:
      * @param signals The ICANSignals contained in the message
      */
     CANTXMessage(ICAN &can_interface,
-                 uint16_t id,
+                 uint32_t id,
                  uint8_t length,
                  uint32_t period,
                  VirtualTimerGroup &timer_group,
+                 ICANSignal &signal_1,
                  Ts &...signals)
-        : CANTXMessage(can_interface, id, length, period, signals...)
+        : CANTXMessage(can_interface, id, false, length, period, timer_group, signal_1, signals...)
     {
-        timer_group.AddTimer(transmit_timer_);
     }
 
     void EncodeAndSend() override
@@ -316,7 +436,7 @@ public:
         can_interface_.SendMessage(message_);
     }
 
-    uint16_t GetID() { return message_.id_; }
+    uint32_t GetID() { return message_.id_; }
 
     VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
 
@@ -334,7 +454,7 @@ private:
         uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+            signals_.at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
         std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
@@ -349,7 +469,7 @@ class CANRXMessage : public ICANRXMessage
 public:
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface,
-                 uint16_t id,
+                 uint32_t id,
                  std::function<uint32_t(void)> get_millis,
                  std::function<void(void)> callback_function,
                  ICANSignal &signal_1,
@@ -366,7 +486,7 @@ public:
 
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface,
-                 uint16_t id,
+                 uint32_t id,
                  std::function<uint32_t(void)> get_millis,
                  ICANSignal &signal_1,
                  Ts &...signals)
@@ -379,7 +499,7 @@ public:
 #ifdef ARDUINO
     template <typename... Ts>
     CANRXMessage(ICAN &can_interface,
-                 uint16_t id,
+                 uint32_t id,
                  std::function<void(void)> callback_function,
                  ICANSignal &signal_1,
                  Ts &...signals)
@@ -388,13 +508,13 @@ public:
     }
 
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint16_t id, ICANSignal &signal_1, Ts &...signals)
+    CANRXMessage(ICAN &can_interface, uint32_t id, ICANSignal &signal_1, Ts &...signals)
         : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
     {
     }
 #endif
 
-    uint16_t GetID() { return id_; }
+    uint32_t GetID() { return id_; }
 
     void DecodeSignals(CANMessage message)
     {
@@ -418,7 +538,7 @@ public:
 
 private:
     ICAN &can_interface_;
-    uint16_t id_;
+    uint32_t id_;
     // A function to get the current time in millis on the current platform
     std::function<uint32_t(void)> get_millis_;
 
