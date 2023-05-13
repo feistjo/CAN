@@ -42,17 +42,22 @@ template <uint8_t bus_num>
 void TeensyCAN<bus_num>::Tick()
 {
     // Repeated code due to limitations of C++11, look into alternatives without repeated code
-    if (bus_num == 2)
+    uint8_t remaining = 1;
+    const uint8_t kMaxEvents{100};
+    for (uint8_t counter = 0; counter < kMaxEvents && remaining != 0; counter++)
     {
-        can_bus_2.events();
-    }
-    else if (bus_num == 3)
-    {
-        can_bus_3.events();
-    }
-    else
-    {
-        can_bus_1.events();
+        if (bus_num == 2)
+        {
+            remaining = can_bus_2.events();
+        }
+        else if (bus_num == 3)
+        {
+            remaining = can_bus_3.events();
+        }
+        else
+        {
+            remaining = can_bus_1.events();
+        }
     }
 }
 
