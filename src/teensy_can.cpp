@@ -4,9 +4,9 @@
 template <uint8_t bus_num>
 std::vector<ICANRXMessage *> TeensyCAN<bus_num>::rx_messages_{};
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_bus_1;
-FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_bus_2;
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> can_bus_3;
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> can_bus_1;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_256> can_bus_2;
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> can_bus_3;
 
 template <uint8_t bus_num>
 void TeensyCAN<bus_num>::Initialize(BaudRate baud)
@@ -42,17 +42,22 @@ template <uint8_t bus_num>
 void TeensyCAN<bus_num>::Tick()
 {
     // Repeated code due to limitations of C++11, look into alternatives without repeated code
-    if (bus_num == 2)
+    uint8_t remaining = 1;
+    const uint8_t kMaxEvents{100};
+    for (uint8_t counter = 0; counter < kMaxEvents && remaining != 0; counter++)
     {
-        can_bus_2.events();
-    }
-    else if (bus_num == 3)
-    {
-        can_bus_3.events();
-    }
-    else
-    {
-        can_bus_1.events();
+        if (bus_num == 2)
+        {
+            remaining = can_bus_2.events();
+        }
+        else if (bus_num == 3)
+        {
+            remaining = can_bus_3.events();
+        }
+        else
+        {
+            remaining = can_bus_1.events();
+        }
     }
 }
 
