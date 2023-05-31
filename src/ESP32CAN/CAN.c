@@ -230,6 +230,9 @@ int CAN_init()
     // enable all interrupts
     MODULE_CAN->IER.U = 0xff;
 
+    //disable bit that can be wake-up interrupt enable or divide baud rate by 2
+    MODULE_CAN->IER.B.WUIE = 0;
+
     // Set acceptance filter
     MODULE_CAN->MOD.B.AFM = __filter.FM;
     MODULE_CAN->MBX_CTRL.ACC.CODE[0] = __filter.ACR0;
