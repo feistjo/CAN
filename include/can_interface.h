@@ -102,6 +102,14 @@ public:
 
     void operator=(const SignalType &signal) { signal_ = signal; }
 
+    SignalType operator+=(const SignalType &signal) { return signal_ += signal; }
+
+    SignalType operator-=(const SignalType &signal) { return signal_ -= signal; }
+
+    SignalType operator*=(const SignalType &signal) { return signal_ *= signal; }
+
+    SignalType operator/=(const SignalType &signal) { return signal_ /= signal; }
+
     operator SignalType() const { return signal_; }
 
 protected:
@@ -269,6 +277,14 @@ public:
     }
 
     void operator=(const SignalType &signal) { ITypedCANSignal<SignalType>::operator=(signal); }
+
+    SignalType operator+=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator+=(signal); }
+
+    SignalType operator-=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator-=(signal); }
+
+    SignalType operator*=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator*=(signal); }
+
+    SignalType operator/=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator/=(signal); }
 };
 
 // Macros for making signed and unsigned CAN signals, default little-endian
