@@ -1,5 +1,4 @@
 import cantools
-import csv
 import sys
 
 def dbc_to_h(dbc_file, h_file):
@@ -15,9 +14,14 @@ def dbc_to_h(dbc_file, h_file):
         signals = []
         for signal in message.signals:
             signalString = ""
-            byteOrder = "Endian" if signal.byte_order == "big_endian" else ""
+            if signal.byte_order == "big_endian":
+                byteOrder = "Endian"
+                endian = ", ICANSignal::ByteOrder::kBigEndian"
+            else:
+                byteOrder = ""
+                endian = ""
             signalType = "Signed" if signal.is_signed else "Unsigned"
-            signalString = "Make" + byteOrder + signalType + "CANSignal(data_type_placeholder," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + ") " + signal.name + "_Signal{};\n"
+            signalString = "Make" + byteOrder + signalType + "CANSignal(data_type_placeholder," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + endian + ") " + signal.name + "_Signal{};\n"
             with open(h_file, 'a') as file:
                 file.write(signalString)
             signals.append(signal.name + "_Signal")
