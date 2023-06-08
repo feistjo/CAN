@@ -1,0 +1,36 @@
+name: DBC to H
+
+on:
+  push:
+    paths:
+      - 'docs/full_bus.dbc'
+
+jobs:
+  convert_dbc_to_csv:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install cantools
+
+    - name: Convert DBC to H
+      run: |
+        python docs/dbc_to_h.py docs/full_bus.dbc docs/full_bus.h
+
+    - name: Commit and push H file
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add docs/full_bus.h
+        git commit -m "Automatically generated .h from DBC" || echo "No changes to the .h file"
+        git push
