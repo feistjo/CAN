@@ -153,6 +153,21 @@ void MITMotorBigEndianCANSignalTest(void)
     TEST_ASSERT_EQUAL(bswap(uint64_t(0x8005800000fff800)), *full_msg);
 }
 
+void OperatorsTest(void)
+{
+    MakeSignedCANSignal(float, 0, 32, 1, 0) test_signal;
+    test_signal = 0;
+    TEST_ASSERT_EQUAL_FLOAT(0, test_signal);
+    test_signal += 10;
+    TEST_ASSERT_EQUAL_FLOAT(10, test_signal);
+    test_signal -= 5;
+    TEST_ASSERT_EQUAL_FLOAT(5, test_signal);
+    test_signal *= 2;
+    TEST_ASSERT_EQUAL_FLOAT(10, test_signal);
+    test_signal /= 2;
+    TEST_ASSERT_EQUAL_FLOAT(5, test_signal);
+}
+
 int runUnityTests(void)
 {
     UNITY_BEGIN();
@@ -163,6 +178,7 @@ int runUnityTests(void)
     RUN_TEST(TypedCanSignalTest);
     RUN_TEST(EnumClassSignalTest);
     RUN_TEST(MITMotorBigEndianCANSignalTest);
+    RUN_TEST(OperatorsTest);
     return UNITY_END();
 }
 
