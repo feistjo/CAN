@@ -17,13 +17,13 @@ def dbc_to_h(dbc_file, h_file):
             signalString = ""
             byteOrder = "Endian" if signal.byte_order == "big_endian" else ""
             signalType = "Signed" if signal.is_signed else "Unsigned"
-            signalString = "Make" + byteOrder + signalType + "CANSignal(your_data_type," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + ") " + signal.name + "_Signal{};\n"
+            signalString = "Make" + byteOrder + signalType + "CANSignal(data_type_placeholder," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + ") " + signal.name + "_Signal{};\n"
             with open(h_file, 'a') as file:
                 file.write(signalString)
             signals.append(signal.name + "_Signal")
         rx_message = "CANRXMessage<" + str(len(signals)) + "> " + message.name + "_RX_Message{can_bus, 0x" + format(message.frame_id, 'x') + ", " + ', '.join(signals) + "};\n"
         rx_messages += rx_message
-        tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message{can_bus, 0x" + format(message.frame_id, 'x') + ", " + str(message.length) + ", your_freq, timer_group, " + ', '.join(signals) + "};\n"
+        tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message{can_bus, 0x" + format(message.frame_id, 'x') + ", " + str(message.length) + ", freq_placeholder, timer_group, " + ', '.join(signals) + "};\n"
         tx_messages += tx_message
     with open(h_file, 'a') as file:
         file.write("\n// RX Messages\n")
