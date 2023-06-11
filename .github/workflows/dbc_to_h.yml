@@ -6,7 +6,7 @@ on:
       - 'docs/full_bus.dbc'
 
 jobs:
-  convert_dbc_to_csv:
+  convert_dbc_to_h:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +31,7 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        git pull
         git add docs/full_bus.h
         git commit -m "Automatically generated .h from DBC" || echo "No changes to the .h file"
         git push
