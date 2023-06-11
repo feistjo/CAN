@@ -418,10 +418,11 @@ BO_ 559 BMS_Temperatures_15: 8 BMS
  SG_ Cell_T_110 : 40|8@1+ (1,-40) [0|0] "C" Vector__XXX
  SG_ Cell_T_111 : 48|8@1+ (1,-40) [0|0] "C" Vector__XXX
 
-BO_ 768 Throttle_Values: 3 E_Throttle
+BO_ 768 Throttle_Values: 4 E_Throttle
  SG_ Accel_Percentage : 0|8@1- (1,0) [0|0] "" Vector__XXX
  SG_ Brake_Percentage : 8|8@1+ (1,0) [0|0] "" Vector__XXX
  SG_ Torque_Limit_Percentage : 16|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Requested_Torque_Percentage : 24|8@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 1040 Brake_Pressure: 4 Brake_Pressure
  SG_ Front_Brake_Pressure : 0|16@1+ (1,0) [0|0] "psi" Vector__XXX
@@ -458,8 +459,11 @@ BO_ 1057 Coolant: 2 Temp_Board
 BO_ 578 BMS_CMD: 8 Vector__XXX
  SG_ BMS_Command : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
-BO_ 769 Throttle_Status: 8 E_Throttle
+BO_ 769 Throttle_Status: 2 E_Throttle
  SG_ Tractive_System_Status : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Release_Accel_Fault : 8|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Potentiometer_Fault : 9|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Gnd_3v3_Fault : 10|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 1280 PDM_Rails: 6 PDM
  SG_ V5_Rail : 0|8@1+ (0.02,0) [0|0] "A" Vector__XXX
@@ -548,5 +552,8 @@ VAL_ 592 Open_Wire_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 577 BMS_State 0 "Shutdown" 1 "Precharge" 2 "Active" 3 "Charging" 4 "Fault" ;
 VAL_ 578 BMS_Command 0 "NoAction" 1 "PrechargeAndCloseContactors" 2 "Shutdown" ;
 VAL_ 769 Tractive_System_Status 0 "Off" 1 "Neutral" 2 "Drive" 3 "FaultDrive" ;
+VAL_ 769 Release_Accel_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 769 Potentiometer_Fault 0 "NotFaulted" 1 "Faulted" ;
+VAL_ 769 Gnd_3v3_Fault 0 "NotFaulted" 1 "Faulted" ;
 VAL_ 1536 IMD_State 0 "Active" 1 "Fault" ;
 
