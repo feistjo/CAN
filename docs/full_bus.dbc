@@ -1,7 +1,6 @@
 VERSION ""
 
 
-
 NS_ : 
 	NS_DESC_
 	CM_
@@ -482,6 +481,11 @@ BO_ 1281 PDM_Devices: 5 PDM
 
 BO_ 1536 IMD: 1 IMD
  SG_ IMD_State : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 770 Throttle_Debug: 6 E_Throttle
+ SG_ Left_ADC : 0|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Right_ADC : 16|16@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ Brake_ADC : 32|16@1+ (1,0) [0|0] "" Vector__XXX
 
 
 
