@@ -333,6 +333,9 @@ MakeUnsignedCANSignal(data_type_placeholder,16,8,0.1,0) Liquid_Cooling_Pump_Sign
 MakeUnsignedCANSignal(data_type_placeholder,24,8,0.02,0) High_Side_Driver_1_Signal{};
 MakeUnsignedCANSignal(data_type_placeholder,32,8,0.02,0) High_Side_Driver_2_Signal{};
 MakeUnsignedCANSignal(data_type_placeholder,0,8,1,0) IMD_State_Signal{};
+MakeUnsignedCANSignal(data_type_placeholder,0,16,1,0) Left_ADC_Signal{};
+MakeUnsignedCANSignal(data_type_placeholder,16,16,1,0) Right_ADC_Signal{};
+MakeUnsignedCANSignal(data_type_placeholder,32,16,1,0) Brake_ADC_Signal{};
 
 // RX Messages
 CANRXMessage<2> FL_Wheel_RX_Message{can_bus, 0x400, FL_Wheel_Speed_Signal, FL_Brake_Temperature_Signal};
@@ -391,6 +394,7 @@ CANRXMessage<4> Throttle_Status_RX_Message{can_bus, 0x301, Tractive_System_Statu
 CANRXMessage<5> PDM_Rails_RX_Message{can_bus, 0x500, V5_Rail_Signal, V12_Rail_Signal, Vbat_Rail_Signal, Vbat_Input_Current_Signal, Vbat_Input_Voltage_Signal};
 CANRXMessage<5> PDM_Devices_RX_Message{can_bus, 0x501, Air_Cooling_Fan_Signal, Liquid_Cooling_Fan_Signal, Liquid_Cooling_Pump_Signal, High_Side_Driver_1_Signal, High_Side_Driver_2_Signal};
 CANRXMessage<1> IMD_RX_Message{can_bus, 0x600, IMD_State_Signal};
+CANRXMessage<3> Throttle_Debug_RX_Message{can_bus, 0x302, Left_ADC_Signal, Right_ADC_Signal, Brake_ADC_Signal};
 
 // TX Messages
 CANTXMessage<2> FL_Wheel_TX_Message{can_bus, 0x400, 4, freq_placeholder, timer_group, FL_Wheel_Speed_Signal, FL_Brake_Temperature_Signal};
@@ -449,3 +453,4 @@ CANTXMessage<4> Throttle_Status_TX_Message{can_bus, 0x301, 2, freq_placeholder, 
 CANTXMessage<5> PDM_Rails_TX_Message{can_bus, 0x500, 6, freq_placeholder, timer_group, V5_Rail_Signal, V12_Rail_Signal, Vbat_Rail_Signal, Vbat_Input_Current_Signal, Vbat_Input_Voltage_Signal};
 CANTXMessage<5> PDM_Devices_TX_Message{can_bus, 0x501, 5, freq_placeholder, timer_group, Air_Cooling_Fan_Signal, Liquid_Cooling_Fan_Signal, Liquid_Cooling_Pump_Signal, High_Side_Driver_1_Signal, High_Side_Driver_2_Signal};
 CANTXMessage<1> IMD_TX_Message{can_bus, 0x600, 1, freq_placeholder, timer_group, IMD_State_Signal};
+CANTXMessage<3> Throttle_Debug_TX_Message{can_bus, 0x302, 6, freq_placeholder, timer_group, Left_ADC_Signal, Right_ADC_Signal, Brake_ADC_Signal};
