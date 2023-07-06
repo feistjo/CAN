@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <vector>
@@ -98,22 +99,22 @@ template <typename SignalType>
 class ITypedCANSignal : public ICANSignal
 {
 public:
-    SignalType &value_ref() { return signal_; }
+    std::atomic<SignalType> &value_ref() { return signal_; }
 
     void operator=(const SignalType &signal) { signal_ = signal; }
 
-    SignalType operator+=(const SignalType &signal) { return signal_ += signal; }
+    SignalType operator+=(const SignalType &signal) { return signal_ = signal_ + signal; }
 
-    SignalType operator-=(const SignalType &signal) { return signal_ -= signal; }
+    SignalType operator-=(const SignalType &signal) { return signal_ = signal_ - signal; }
 
-    SignalType operator*=(const SignalType &signal) { return signal_ *= signal; }
+    SignalType operator*=(const SignalType &signal) { return signal_ = signal_ * signal; }
 
-    SignalType operator/=(const SignalType &signal) { return signal_ /= signal; }
+    SignalType operator/=(const SignalType &signal) { return signal_ = signal_ / signal; }
 
     operator SignalType() const { return signal_; }
 
 protected:
-    SignalType signal_;
+    std::atomic<SignalType> signal_;
 };
 
 // Needed so compiler knows these template classes exist
@@ -188,15 +189,17 @@ public:
     {
         if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
         {
-            *buffer |= (static_cast<underlying_type>(this->signal_) << position) & mask;
+            SignalType signal = this->signal_;
+            *buffer |= (static_cast<underlying_type>(signal) << position) & mask;
         }
         else
         {
+            SignalType signal = this->signal_;
             uint8_t temp_reversed_buffer[8]{0};
             void *temp_reversed_buffer_ptr{
                 temp_reversed_buffer};  // intermediate as void* to get rid of strict aliasing compiler warnings
             *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) |=
-                (static_cast<underlying_type>(this->signal_) << (64 - (position + length)));
+                (static_cast<underlying_type>(signal) << (64 - (position + length)));
             std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
             *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) & mask;
         }
@@ -207,18 +210,19 @@ public:
     {
         if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
         {
-            *buffer |= (static_cast<underlying_type>(
-                            ((this->signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
-                        << position)
-                       & mask;
+            SignalType signal = this->signal_;
+            *buffer |=
+                (static_cast<underlying_type>(((signal - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                 << position)
+                & mask;
         }
         else
         {
+            SignalType signal = this->signal_;
             uint8_t temp_reversed_buffer[8]{0};
             void *temp_reversed_buffer_ptr{temp_reversed_buffer};
             *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) |=
-                (static_cast<underlying_type>(
-                     ((this->signal_ - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
+                (static_cast<underlying_type>(((signal - CANTemplateGetFloat(offset)) / CANTemplateGetFloat(factor)))
                  << (64 - (position + length)));
             std::reverse(std::begin(temp_reversed_buffer), std::end(temp_reversed_buffer));
             *buffer |= *reinterpret_cast<underlying_type *>(temp_reversed_buffer_ptr) & mask;
