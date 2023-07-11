@@ -101,6 +101,8 @@ class ITypedCANSignal : public ICANSignal
 public:
     std::atomic<SignalType> &value_ref() { return signal_; }
 
+    operator SignalType() const { return signal_; }
+
     void operator=(const SignalType &signal) { signal_ = signal; }
 
     SignalType operator+=(const SignalType &signal) { return signal_ = signal_ + signal; }
@@ -111,7 +113,13 @@ public:
 
     SignalType operator/=(const SignalType &signal) { return signal_ = signal_ / signal; }
 
-    operator SignalType() const { return signal_; }
+    bool operator>(const SignalType &signal) { return signal_ > signal; }
+
+    bool operator<(const SignalType &signal) { return signal_ < signal; }
+
+    bool operator>=(const SignalType &signal) { return signal_ >= signal; }
+
+    bool operator<=(const SignalType &signal) { return signal_ <= signal; }
 
 protected:
     std::atomic<SignalType> signal_;
@@ -180,6 +188,7 @@ public:
     CANSignal()
     {
         static_assert(factor != 0, "The integer representation of the factor for a CAN signal must not be 0");
+        this->signal_ = static_cast<SignalType>(0);
     }
 
     void EncodeSignal(uint64_t *buffer) override { InternalEncodeSignal(buffer); }
@@ -317,7 +326,9 @@ class ICANTXMessage
 {
 public:
     virtual uint32_t GetID() = 0;
+#if !defined(NATIVE)  // workaround for unit tests
     virtual VirtualTimer &GetTransmitTimer() = 0;
+#endif
     virtual void EncodeSignals() = 0;
     virtual void EncodeAndSend() = 0;
 };
@@ -347,6 +358,55 @@ public:
     virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
 
     virtual void Tick() = 0;
+};
+
+class MockCAN : public ICAN
+{
+public:
+    void Initialize(BaudRate baud) {}
+    bool SendMessage(CANMessage &msg)
+    {
+        /* for (size_t i = 0; i < rx_messages_.size(); i++)
+        {
+            if (rx_messages_[i]->GetID() == msg.id_)
+            {
+                rx_messages_[i]->DecodeSignals(msg);
+            }
+        } */
+        last_message = msg;
+        return true;
+    }
+    void RegisterRXMessage(ICANRXMessage &msg)
+    { /* rx_messages_.push_back(&msg); */
+    }
+    void Tick() {}
+
+    CANMessage last_message{0, 8, std::array<uint8_t, 8>{0}};
+
+private:
+    // std::vector<ICANRXMessage *> rx_messages_; //not working in native unit tests
+};
+
+class ISignalGroup
+{
+public:
+    virtual ICANSignal *at(size_t index) = 0;
+    virtual size_t size() const = 0;
+};
+
+template <size_t num_signals>
+class SignalGroup : public std::array<ICANSignal *, num_signals>, public ISignalGroup
+{
+public:
+    template <typename... Ts>
+    SignalGroup(Ts &...signals) : std::array<ICANSignal *, num_signals>{&signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
+    }
+
+    ICANSignal *at(size_t index) override { return std::array<ICANSignal *, num_signals>::at(index); }
+
+    size_t size() const override { return std::array<ICANSignal *, num_signals>::size(); }
 };
 
 /**
@@ -480,6 +540,164 @@ private:
     }
 };
 
+template <size_t num_groups, typename MultiplexorType>
+class MultiplexedCANTXMessage : public ICANTXMessage
+{
+public:
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param multiplexor The CANSignal that will be used to multiplex the message
+     * @param signal_groups The SignalGroups contained in the message
+     */
+    MultiplexedCANTXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            bool extended_id,
+                            uint8_t length,
+                            uint32_t period,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : can_interface_{can_interface},
+          message_{id, extended_id, length, std::array<uint8_t, 8>()},
+#if !defined(NATIVE)  // workaround for unit tests
+          transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
+#endif
+          multiplexor_{&multiplexor},
+          signal_groups_{&signal_groups...}
+    {
+        static_assert(sizeof...(signal_groups) == num_groups,
+                      "Wrong number of signal groups passed into MultiplexedCANTXMessage.");
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object, default to standard id
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param multiplexor The CANSignal that will be used to multiplex the message
+     * @param signal_groups The SignalGroups contained in the message
+     */
+    MultiplexedCANTXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            uint8_t length,
+                            uint32_t period,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANTXMessage(can_interface, id, false, length, period, multiplexor, signal_groups...)
+    {
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param multiplexor The CANSignal that will be used to multiplex the message
+     * @param signal_groups The SignalGroups contained in the message
+     */
+    MultiplexedCANTXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            bool extended_id,
+                            uint8_t length,
+                            uint32_t period,
+                            VirtualTimerGroup &timer_group,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANTXMessage(can_interface, id, extended_id, length, period, multiplexor, signal_groups...)
+    {
+#if !defined(NATIVE)  // workaround for unit tests
+        timer_group.AddTimer(transmit_timer_);
+#endif
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup, default to standard
+     * id
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param multiplexor The CANSignal that will be used to multiplex the message
+     * @param signal_groups The SignalGroups contained in the message
+     */
+    MultiplexedCANTXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            uint8_t length,
+                            uint32_t period,
+                            VirtualTimerGroup &timer_group,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANTXMessage(can_interface, id, false, length, period, timer_group, multiplexor, signal_groups...)
+    {
+    }
+
+    void EncodeAndSend() override  // increments multiplexor automatically
+    {
+        EncodeSignals();
+        can_interface_.SendMessage(message_);
+        if (static_cast<MultiplexorType>(*multiplexor_) < num_groups - 1)
+        {
+            *multiplexor_ += 1;
+        }
+        else
+        {
+            *multiplexor_ = 0;
+        }
+    }
+
+    uint32_t GetID() { return message_.id_; }
+
+#if !defined(NATIVE)  // workaround for unit tests
+    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+#endif
+
+    void Enable()
+    { /* transmit_timer_.Enable(); */
+    }
+    void Disable()
+    { /* transmit_timer_.Disable(); */
+    }
+
+private:
+    ICAN &can_interface_;
+    CANMessage message_;
+#if !defined(NATIVE)  // workaround for unit tests
+    VirtualTimer transmit_timer_;
+#endif
+    ITypedCANSignal<MultiplexorType> *multiplexor_;
+    std::array<ISignalGroup *, num_groups> signal_groups_;
+
+    uint64_t multiplexor_value_ = 0;
+
+    void EncodeSignals()
+    {
+        uint8_t temp_raw[8]{0};
+        multiplexor_->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+        for (uint8_t i = 0; i < signal_groups_.at(*multiplexor_)->size(); i++)
+        {
+            signal_groups_.at(*multiplexor_)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+        }
+        std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
+    }
+};
+
 /**
  * @brief A class for storing signals that get updated every time a matching message is received
  */
@@ -566,6 +784,108 @@ private:
     std::function<void(void)> callback_function_;
 
     std::array<ICANSignal *, num_signals> signals_;
+
+    uint64_t raw_message;
+
+    uint32_t last_receive_time_ = 0;
+};
+
+template <size_t num_groups, typename MultiplexorType>
+class MultiplexedCANRXMessage : public ICANRXMessage
+{
+public:
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<uint32_t(void)> get_millis,
+                            std::function<void(void)> callback_function,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          multiplexor_{&multiplexor},
+          signal_groups_{&signal_groups...}
+    {
+        static_assert(sizeof...(signal_groups) == num_groups,
+                      "Wrong number of SignalGroups passed into MultiplexedCANRXMessage.");
+        can_interface_.RegisterRXMessage(*this);
+    }
+
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<uint32_t(void)> get_millis,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANRXMessage{can_interface, id, get_millis, nullptr, multiplexor, signal_groups...}
+    {
+    }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<void(void)> callback_function,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANRXMessage{
+            can_interface, id, []() { return millis(); }, callback_function, multiplexor, signal_groups...}
+    {
+    }
+
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &...signal_groups)
+        : MultiplexedCANRXMessage{can_interface, id, []() { return millis(); }, nullptr, multiplexor, signal_groups...}
+    {
+    }
+#endif
+
+    uint32_t GetID() { return id_; }
+
+    void DecodeSignals(CANMessage message)
+    {
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        multiplexor_->DecodeSignal(&temp_raw);
+        if (static_cast<MultiplexorType>(*multiplexor_)
+            >= num_groups)  // If the multiplexor is out of range, don't decode any signals
+        {
+            return;
+        }
+        for (uint8_t i = 0; i < signal_groups_.at(*multiplexor_)->size(); i++)
+        {
+            signal_groups_.at(*multiplexor_)->at(i)->DecodeSignal(&temp_raw);
+        }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+
+        last_receive_time_ = get_millis_();
+    }
+
+    uint32_t GetLastReceiveTime() { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() { return get_millis_() - last_receive_time_; }
+
+private:
+    ICAN &can_interface_;
+    uint32_t id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
+    ITypedCANSignal<MultiplexorType> *multiplexor_;
+    std::array<ISignalGroup *, num_groups> signal_groups_;
 
     uint64_t raw_message;
 
