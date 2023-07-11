@@ -14,6 +14,11 @@ def dbc_to_h(dbc_file, h_file):
         signals = []
         for signal in message.signals:
             signalString = ""
+            if (signal.choices != None):
+                signalString += "enum class " + signal.name + "_Enum : data_type_placeholder {\n"
+                for value, name in signal.choices.items():
+                    signalString += '_'.join(str(name).replace('-', ' ').replace('(', ' ').replace(')', ' ').split()) + " = " + str(value) + ",\n"
+                signalString += "};\n"
             if signal.byte_order == "big_endian":
                 byteOrder = "Endian"
                 endian = ", ICANSignal::ByteOrder::kBigEndian"
@@ -21,7 +26,7 @@ def dbc_to_h(dbc_file, h_file):
                 byteOrder = ""
                 endian = ""
             signalType = "Signed" if signal.is_signed else "Unsigned"
-            signalString = "Make" + byteOrder + signalType + "CANSignal(data_type_placeholder," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + endian + ") " + signal.name + "_Signal{};\n"
+            signalString += "Make" + byteOrder + signalType + "CANSignal(" + ("data_type_placeholder" if signal.choices == None else signal.name + "_Enum") + "," + str(signal.start) + "," + str(signal.length) + "," + str(signal.scale) + "," + str(signal.offset) + endian + ") " + signal.name + "_Signal{};\n"
             with open(h_file, 'a') as file:
                 file.write(signalString)
             signals.append(signal.name + "_Signal")
