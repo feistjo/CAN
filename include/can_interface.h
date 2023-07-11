@@ -387,21 +387,25 @@ private:
     // std::vector<ICANRXMessage *> rx_messages_; //not working in native unit tests
 };
 
-class ISignalGroup
+class IMultiplexedSignalGroup
 {
 public:
     virtual ICANSignal *at(size_t index) = 0;
     virtual size_t size() const = 0;
+
+    uint64_t multiplexor_value_{0};
 };
 
 template <size_t num_signals>
-class SignalGroup : public std::array<ICANSignal *, num_signals>, public ISignalGroup
+class MultiplexedSignalGroup : public std::array<ICANSignal *, num_signals>, public IMultiplexedSignalGroup
 {
 public:
     template <typename... Ts>
-    SignalGroup(Ts &...signals) : std::array<ICANSignal *, num_signals>{&signals...}
+    MultiplexedSignalGroup(uint64_t multiplexor_value, Ts &...signals)
+        : std::array<ICANSignal *, num_signals>{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
+        multiplexor_value_ = multiplexor_value;
     }
 
     ICANSignal *at(size_t index) override { return std::array<ICANSignal *, num_signals>::at(index); }
@@ -650,15 +654,16 @@ public:
 
     void EncodeAndSend() override  // increments multiplexor automatically
     {
+        *multiplexor_ = signal_groups_.at(multiplexor_index_)->multiplexor_value_;
         EncodeSignals();
         can_interface_.SendMessage(message_);
-        if (static_cast<MultiplexorType>(*multiplexor_) < num_groups - 1)
+        if (multiplexor_index_ < num_groups - 1)
         {
-            *multiplexor_ += 1;
+            multiplexor_index_ += 1;
         }
         else
         {
-            *multiplexor_ = 0;
+            multiplexor_index_ = 0;
         }
     }
 
@@ -682,17 +687,17 @@ private:
     VirtualTimer transmit_timer_;
 #endif
     ITypedCANSignal<MultiplexorType> *multiplexor_;
-    std::array<ISignalGroup *, num_groups> signal_groups_;
+    std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
 
-    uint64_t multiplexor_value_ = 0;
+    uint64_t multiplexor_index_ = 0;
 
     void EncodeSignals()
     {
         uint8_t temp_raw[8]{0};
         multiplexor_->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
-        for (uint8_t i = 0; i < signal_groups_.at(*multiplexor_)->size(); i++)
+        for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index_)->size(); i++)
         {
-            signal_groups_.at(*multiplexor_)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+            signal_groups_.at(multiplexor_index_)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
         }
         std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
@@ -853,14 +858,22 @@ public:
     {
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
         multiplexor_->DecodeSignal(&temp_raw);
-        if (static_cast<MultiplexorType>(*multiplexor_)
-            >= num_groups)  // If the multiplexor is out of range, don't decode any signals
+        uint64_t multiplexor_index = 0xFFFFFFFFFFFFFFFFull;  // init to invalid value
+        for (size_t i = 0; i < num_groups; i++)
+        {
+            if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
+            {
+                multiplexor_index = i;
+                break;
+            }
+        }
+        if (multiplexor_index == 0xFFFFFFFFFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
         {
             return;
         }
-        for (uint8_t i = 0; i < signal_groups_.at(*multiplexor_)->size(); i++)
+        for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index)->size(); i++)
         {
-            signal_groups_.at(*multiplexor_)->at(i)->DecodeSignal(&temp_raw);
+            signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&temp_raw);
         }
 
         // DecodeSignals is called only on message received
@@ -885,7 +898,9 @@ private:
     std::function<void(void)> callback_function_;
 
     ITypedCANSignal<MultiplexorType> *multiplexor_;
-    std::array<ISignalGroup *, num_groups> signal_groups_;
+    std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
+
+    uint64_t multiplexor_index{0};
 
     uint64_t raw_message;
 

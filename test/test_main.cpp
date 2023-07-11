@@ -173,18 +173,18 @@ void MultiplexedCANMessageTest(void)
     MakeUnsignedCANSignal(uint8_t, 0, 8, 1, 0) tx_multiplexor;
     MakeSignedCANSignal(int32_t, 8, 32, 1, 0) tx_signal_0_0;
     MakeSignedCANSignal(int16_t, 40, 16, 1, 0) tx_signal_0_1;
-    SignalGroup<2> tx_signals_0{tx_signal_0_0, tx_signal_0_1};
+    MultiplexedSignalGroup<2> tx_signals_0{0, tx_signal_0_0, tx_signal_0_1};
     MakeSignedCANSignal(int32_t, 8, 32, 1, 0) tx_signal_1_0;
     MakeSignedCANSignal(int16_t, 40, 16, 1, 0) tx_signal_1_1;
-    SignalGroup<2> tx_signals_1{tx_signal_1_0, tx_signal_1_1};
+    MultiplexedSignalGroup<2> tx_signals_1{1, tx_signal_1_0, tx_signal_1_1};
 
     MakeUnsignedCANSignal(uint8_t, 0, 8, 1, 0) rx_multiplexor;
     MakeSignedCANSignal(int32_t, 8, 32, 1, 0) rx_signal_0_0;
     MakeSignedCANSignal(int16_t, 40, 16, 1, 0) rx_signal_0_1;
-    SignalGroup<2> rx_signals_0{rx_signal_0_0, rx_signal_0_1};
+    MultiplexedSignalGroup<2> rx_signals_0{0, rx_signal_0_0, rx_signal_0_1};
     MakeSignedCANSignal(int32_t, 8, 32, 1, 0) rx_signal_1_0;
     MakeSignedCANSignal(int16_t, 40, 16, 1, 0) rx_signal_1_1;
-    SignalGroup<2> rx_signals_1{rx_signal_1_0, rx_signal_1_1};
+    MultiplexedSignalGroup<2> rx_signals_1{1, rx_signal_1_0, rx_signal_1_1};
 
     MockCAN can{};
 
@@ -192,14 +192,14 @@ void MultiplexedCANMessageTest(void)
     MultiplexedCANRXMessage<2, uint8_t> rx_msg{
         can, 100, []() { return 0; }, rx_multiplexor, rx_signals_0, rx_signals_1};
 
-    TEST_ASSERT(tx_multiplexor == 0);
     tx_signal_0_0 = 1;
     tx_signal_0_1 = 2;
     tx_signal_1_0 = 3;
     tx_signal_1_1 = 4;
 
     tx_msg.EncodeAndSend();
-    TEST_ASSERT(tx_multiplexor == 1);
+    TEST_ASSERT(tx_multiplexor == 0);
+
     rx_msg.DecodeSignals(can.last_message);
     TEST_ASSERT(rx_multiplexor == 0);
     TEST_ASSERT(rx_signal_0_0 == 1);
@@ -211,13 +211,17 @@ void MultiplexedCANMessageTest(void)
     tx_signal_0_1 = 0;
 
     tx_msg.EncodeAndSend();
-    TEST_ASSERT(tx_multiplexor == 0);
+    TEST_ASSERT(tx_multiplexor == 1);
+
     rx_msg.DecodeSignals(can.last_message);
     TEST_ASSERT(rx_multiplexor == 1);
     TEST_ASSERT(rx_signal_0_0 == 1);
     TEST_ASSERT(rx_signal_0_1 == 2);
     TEST_ASSERT(rx_signal_1_0 == 3);
     TEST_ASSERT(rx_signal_1_1 == 4);
+
+    tx_msg.EncodeAndSend();
+    TEST_ASSERT(tx_multiplexor == 0);
 }
 
 int runUnityTests(void)
