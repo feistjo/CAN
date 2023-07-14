@@ -9,7 +9,11 @@
 #include <functional>
 #include <vector>
 
+#ifdef TIMER_IMPLEMENTATION
+#include TIMER_IMPLEMENTATION
+#else
 #include "virtualTimer.h"
+#endif
 
 #ifdef ARDUINO
 #include <Arduino.h>
@@ -52,16 +56,17 @@ constexpr typename std::enable_if<std::is_unsigned<T>::value, T>::type bswap(T i
 
 constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, ICANSignal::ByteOrder byte_order)
 {
-    return (byte_order == ICANSignal::ByteOrder::kLittleEndian
-            || (length - (8 - (position % 8)) /* bits_in_last_byte */ < 0))
-               ? position
-               : position
-                     - ((8
-                         * (((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */ == 0
-                                ? ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */
-                                : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
-                        + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
-                        - (8 - (position % 8)) /* bits_in_last_byte */);
+    return static_cast<uint8_t>(
+        (byte_order == ICANSignal::ByteOrder::kLittleEndian
+         || (length - (8 - (position % 8)) /* bits_in_last_byte */ < 0))
+            ? position
+            : position
+                  - ((8
+                      * (((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */ == 0
+                             ? ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */
+                             : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
+                     + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
+                     - (8 - (position % 8)) /* bits_in_last_byte */));
     /*
         if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
         {
@@ -135,7 +140,7 @@ template class ITypedCANSignal<int32_t>;
 template class ITypedCANSignal<float>;
 
 static constexpr int kCANTemplateFloatDenominator{1 << 16};  // 2^16
-constexpr int CANTemplateConvertFloat(float value) { return value * kCANTemplateFloatDenominator; }
+constexpr int CANTemplateConvertFloat(float value) { return static_cast<int>(value * kCANTemplateFloatDenominator); }
 constexpr float CANTemplateGetFloat(int value) { return static_cast<float>(value) / kCANTemplateFloatDenominator; }
 
 template <bool signed_raw>
@@ -270,11 +275,12 @@ public:
             uint8_t temp_buffer[8]{0};
             void *temp_buffer_ptr{temp_buffer};
             *reinterpret_cast<underlying_type *>(temp_buffer_ptr) = *buffer & mask;
-            this->signal_ = static_cast<SignalType>(
-                (((*reinterpret_cast<underlying_type *>(temp_buffer_ptr)) << (64 - (position + length))
-                  >> (64 - length))
-                 * CANTemplateGetFloat(factor))
-                + CANTemplateGetFloat(offset));
+            this->signal_ =
+                static_cast<SignalType>((static_cast<float>((*reinterpret_cast<underlying_type *>(temp_buffer_ptr))
+                                                                << (64 - (position + length))
+                                                            >> (64 - length))
+                                         * CANTemplateGetFloat(factor))
+                                        + CANTemplateGetFloat(offset));
         }
         else
         {
@@ -363,7 +369,7 @@ public:
 class MockCAN : public ICAN
 {
 public:
-    void Initialize(BaudRate baud) {}
+    void Initialize(BaudRate baud __attribute__((unused))) {}
     bool SendMessage(CANMessage &msg)
     {
         /* for (size_t i = 0; i < rx_messages_.size(); i++)
@@ -376,7 +382,7 @@ public:
         last_message = msg;
         return true;
     }
-    void RegisterRXMessage(ICANRXMessage &msg)
+    void RegisterRXMessage(ICANRXMessage &msg __attribute__((unused)))
     { /* rx_messages_.push_back(&msg); */
     }
     void Tick() {}
@@ -401,7 +407,7 @@ class MultiplexedSignalGroup : public std::array<ICANSignal *, num_signals>, pub
 {
 public:
     template <typename... Ts>
-    MultiplexedSignalGroup(uint64_t multiplexor_value, Ts &...signals)
+    MultiplexedSignalGroup(uint64_t multiplexor_value, Ts &... signals)
         : std::array<ICANSignal *, num_signals>{&signals...}
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
@@ -438,7 +444,7 @@ public:
                  uint8_t length,
                  uint32_t period,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : can_interface_{can_interface},
           message_{id, extended_id, length, std::array<uint8_t, 8>()},
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
@@ -459,7 +465,7 @@ public:
      * @param signals The ICANSignals contained in the message
      */
     CANTXMessage(
-        ICAN &can_interface, uint32_t id, uint8_t length, uint32_t period, ICANSignal &signal_1, Ts &...signals)
+        ICAN &can_interface, uint32_t id, uint8_t length, uint32_t period, ICANSignal &signal_1, Ts &... signals)
         : CANTXMessage(can_interface, id, false, length, period, signal_1, signals...)
     {
     }
@@ -484,7 +490,7 @@ public:
                  uint32_t period,
                  VirtualTimerGroup &timer_group,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : CANTXMessage(can_interface, id, extended_id, length, period, signal_1, signals...)
     {
         timer_group.AddTimer(transmit_timer_);
@@ -509,7 +515,7 @@ public:
                  uint32_t period,
                  VirtualTimerGroup &timer_group,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : CANTXMessage(can_interface, id, false, length, period, timer_group, signal_1, signals...)
     {
     }
@@ -566,7 +572,7 @@ public:
                             uint8_t length,
                             uint32_t period,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : can_interface_{can_interface},
           message_{id, extended_id, length, std::array<uint8_t, 8>()},
 #if !defined(NATIVE)  // workaround for unit tests
@@ -595,7 +601,7 @@ public:
                             uint8_t length,
                             uint32_t period,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANTXMessage(can_interface, id, false, length, period, multiplexor, signal_groups...)
     {
     }
@@ -620,7 +626,7 @@ public:
                             uint32_t period,
                             VirtualTimerGroup &timer_group,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANTXMessage(can_interface, id, extended_id, length, period, multiplexor, signal_groups...)
     {
 #if !defined(NATIVE)  // workaround for unit tests
@@ -647,7 +653,7 @@ public:
                             uint32_t period,
                             VirtualTimerGroup &timer_group,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANTXMessage(can_interface, id, false, length, period, timer_group, multiplexor, signal_groups...)
     {
     }
@@ -716,7 +722,7 @@ public:
                  std::function<uint32_t(void)> get_millis,
                  std::function<void(void)> callback_function,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : can_interface_{can_interface},
           id_{id},
           get_millis_{get_millis},
@@ -732,7 +738,7 @@ public:
                  uint32_t id,
                  std::function<uint32_t(void)> get_millis,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : CANRXMessage{can_interface, id, get_millis, nullptr, signal_1, signals...}
     {
     }
@@ -745,13 +751,13 @@ public:
                  uint32_t id,
                  std::function<void(void)> callback_function,
                  ICANSignal &signal_1,
-                 Ts &...signals)
+                 Ts &... signals)
         : CANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signal_1, signals...}
     {
     }
 
     template <typename... Ts>
-    CANRXMessage(ICAN &can_interface, uint32_t id, ICANSignal &signal_1, Ts &...signals)
+    CANRXMessage(ICAN &can_interface, uint32_t id, ICANSignal &signal_1, Ts &... signals)
         : CANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
     {
     }
@@ -805,7 +811,7 @@ public:
                             std::function<uint32_t(void)> get_millis,
                             std::function<void(void)> callback_function,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : can_interface_{can_interface},
           id_{id},
           get_millis_{get_millis},
@@ -823,7 +829,7 @@ public:
                             uint32_t id,
                             std::function<uint32_t(void)> get_millis,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANRXMessage{can_interface, id, get_millis, nullptr, multiplexor, signal_groups...}
     {
     }
@@ -836,7 +842,7 @@ public:
                             uint32_t id,
                             std::function<void(void)> callback_function,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANRXMessage{
             can_interface, id, []() { return millis(); }, callback_function, multiplexor, signal_groups...}
     {
@@ -846,7 +852,7 @@ public:
     MultiplexedCANRXMessage(ICAN &can_interface,
                             uint32_t id,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
-                            Ts &...signal_groups)
+                            Ts &... signal_groups)
         : MultiplexedCANRXMessage{can_interface, id, []() { return millis(); }, nullptr, multiplexor, signal_groups...}
     {
     }
