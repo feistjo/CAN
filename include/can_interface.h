@@ -527,9 +527,9 @@ public:
         can_interface_.SendMessage(message_);
     }
 
-    uint32_t GetID() { return message_.id_; }
+    uint32_t GetID() override { return message_.id_; }
 
-    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+    VirtualTimer &GetTransmitTimer() override { return transmit_timer_; }
 
     void Enable() { transmit_timer_.Enable(); }
     void Disable() { transmit_timer_.Disable(); }
@@ -540,7 +540,7 @@ private:
     VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
 
-    void EncodeSignals()
+    void EncodeSignals() override
     {
         uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
