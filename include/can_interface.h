@@ -865,7 +865,7 @@ public:
     {
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
         multiplexor_->DecodeSignal(&temp_raw);
-        uint64_t multiplexor_index = 0xFFFFFFFFFFFFFFFFull;  // init to invalid value
+        size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
         for (size_t i = 0; i < num_groups; i++)
         {
             if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
@@ -874,7 +874,7 @@ public:
                 break;
             }
         }
-        if (multiplexor_index == 0xFFFFFFFFFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
+        if (multiplexor_index == 0xFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
         {
             return;
         }
