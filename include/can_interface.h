@@ -289,7 +289,8 @@ public:
             *reinterpret_cast<underlying_type *>(temp_buffer_ptr) = *buffer & mask;
             std::reverse(std::begin(temp_buffer), std::end(temp_buffer));
             this->signal_ = static_cast<SignalType>(
-                (((*reinterpret_cast<underlying_type *>(temp_buffer_ptr)) << position >> (64 - length))
+                (static_cast<float>((*reinterpret_cast<underlying_type *>(temp_buffer_ptr)) << position
+                                    >> (64 - length))
                  * CANTemplateGetFloat(factor))
                 + CANTemplateGetFloat(offset));
         }
