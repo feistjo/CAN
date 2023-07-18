@@ -730,9 +730,10 @@ private:
         }
         if (has_always_active_signal_group_)
         {
-            for (uint8_t i = 0; i < signal_groups_.at(always_active_signal_group_index_)->size(); i++)
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
             {
-                signal_groups_.at(always_active_signal_group_index_)
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
                     ->at(i)
                     ->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
             }
@@ -924,9 +925,12 @@ public:
         }
         if (has_always_active_signal_group_)
         {
-            for (uint8_t i = 0; i < signal_groups_.at(always_active_signal_group_index_)->size(); i++)
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
             {
-                signal_groups_.at(always_active_signal_group_index_)->at(i)->DecodeSignal(&temp_raw);
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
+                    ->at(i)
+                    ->DecodeSignal(&temp_raw);
             }
         }
 
