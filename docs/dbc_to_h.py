@@ -86,10 +86,10 @@ def dbc_to_h(dbc_file, h_file):
             #MultiplexedCANTXMessage<2, uint8_t> tx_msg{can, 100, 8, 100, tx_multiplexor, tx_signals_0, tx_signals_1};
             rx_message = signal_groups_str
             rx_message += "MultiplexedCANRXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + multiplexor_signal_str + ", " + ', '.join(signal_groups) + "};\n"
-            tx_message = "MultiplexedCANTXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset)  + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "")  + str(message.length) + ", freq_placeholder, timer_group, " + multiplexor_signal_str + ", " + ', '.join(signal_groups) +  "};\n"
+            tx_message = "MultiplexedCANTXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset)  + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "")  + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group, " + multiplexor_signal_str + ", " + ', '.join(signal_groups) +  "};\n"
         else:
             rx_message = "CANRXMessage<" + str(len(signals)) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ', '.join(signals) + "};\n"
-            tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "") + str(message.length) + ", freq_placeholder, timer_group, " + ', '.join(signals) + "};\n"
+            tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "") + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group, " + ', '.join(signals) + "};\n"
         rx_messages += rx_message
         tx_messages += tx_message
     with open(h_file, 'a') as file:
