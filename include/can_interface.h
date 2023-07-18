@@ -401,6 +401,7 @@ public:
     virtual size_t size() const = 0;
 
     uint64_t multiplexor_value_{0};
+    bool always_active_{false};
 };
 
 template <size_t num_signals>
@@ -413,6 +414,16 @@ public:
     {
         static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
         multiplexor_value_ = multiplexor_value;
+        always_active_ = false;
+    }
+
+    template <typename... Ts>
+    MultiplexedSignalGroup(bool always_active, uint64_t multiplexor_value, Ts &... signals)
+        : std::array<ICANSignal *, num_signals>{&signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
+        multiplexor_value_ = multiplexor_value;
+        always_active_ = always_active;
     }
 
     ICANSignal *at(size_t index) override { return std::array<ICANSignal *, num_signals>::at(index); }
@@ -527,9 +538,9 @@ public:
         can_interface_.SendMessage(message_);
     }
 
-    uint32_t GetID() { return message_.id_; }
+    uint32_t GetID() override { return message_.id_; }
 
-    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+    VirtualTimer &GetTransmitTimer() override { return transmit_timer_; }
 
     void Enable() { transmit_timer_.Enable(); }
     void Disable() { transmit_timer_.Disable(); }
@@ -540,7 +551,7 @@ private:
     VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
 
-    void EncodeSignals()
+    void EncodeSignals() override
     {
         uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
@@ -584,6 +595,15 @@ public:
     {
         static_assert(sizeof...(signal_groups) == num_groups,
                       "Wrong number of signal groups passed into MultiplexedCANTXMessage.");
+        for (size_t i = 0; i < signal_groups_.size(); i++)
+        {
+            if (signal_groups_.at(i)->always_active_)
+            {
+                has_always_active_signal_group_ = true;
+                always_active_signal_group_index_ = i;
+                break;
+            }
+        }
     }
 
     template <typename... Ts>
@@ -695,6 +715,8 @@ private:
 #endif
     ITypedCANSignal<MultiplexorType> *multiplexor_;
     std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
+    bool has_always_active_signal_group_{false};
+    uint64_t always_active_signal_group_index_{0};
 
     uint64_t multiplexor_index_ = 0;
 
@@ -705,6 +727,16 @@ private:
         for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index_)->size(); i++)
         {
             signal_groups_.at(multiplexor_index_)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+        }
+        if (has_always_active_signal_group_)
+        {
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
+            {
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
+                    ->at(i)
+                    ->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+            }
         }
         std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
@@ -823,6 +855,15 @@ public:
         static_assert(sizeof...(signal_groups) == num_groups,
                       "Wrong number of SignalGroups passed into MultiplexedCANRXMessage.");
         can_interface_.RegisterRXMessage(*this);
+        for (size_t i = 0; i < signal_groups_.size(); i++)
+        {
+            if (signal_groups_.at(i)->always_active_)
+            {
+                has_always_active_signal_group_ = true;
+                always_active_signal_group_index_ = i;
+                break;
+            }
+        }
     }
 
     template <typename... Ts>
@@ -865,7 +906,7 @@ public:
     {
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
         multiplexor_->DecodeSignal(&temp_raw);
-        uint64_t multiplexor_index = 0xFFFFFFFFFFFFFFFFull;  // init to invalid value
+        size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
         for (size_t i = 0; i < num_groups; i++)
         {
             if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
@@ -874,13 +915,23 @@ public:
                 break;
             }
         }
-        if (multiplexor_index == 0xFFFFFFFFFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
+        if (multiplexor_index == 0xFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
         {
             return;
         }
         for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index)->size(); i++)
         {
             signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&temp_raw);
+        }
+        if (has_always_active_signal_group_)
+        {
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
+            {
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
+                    ->at(i)
+                    ->DecodeSignal(&temp_raw);
+            }
         }
 
         // DecodeSignals is called only on message received
@@ -906,6 +957,8 @@ private:
 
     ITypedCANSignal<MultiplexorType> *multiplexor_;
     std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
+    bool has_always_active_signal_group_{false};
+    uint64_t always_active_signal_group_index_{0};
 
     uint64_t multiplexor_index{0};
 
