@@ -815,8 +815,8 @@ public:
         last_receive_time_ = get_millis_();
     }
 
-    uint32_t GetLastReceiveTime() { return last_receive_time_; }
-    uint32_t GetTimeSinceLastReceive() { return get_millis_() - last_receive_time_; }
+    uint32_t GetLastReceiveTime() const { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
 
 private:
     ICAN &can_interface_;
@@ -943,8 +943,8 @@ public:
         last_receive_time_ = get_millis_();
     }
 
-    uint32_t GetLastReceiveTime() { return last_receive_time_; }
-    uint32_t GetTimeSinceLastReceive() { return get_millis_() - last_receive_time_; }
+    uint32_t GetLastReceiveTime() const { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
 
 private:
     ICAN &can_interface_;
