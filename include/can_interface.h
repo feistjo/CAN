@@ -681,7 +681,7 @@ public:
 
     void EncodeAndSend() override  // increments multiplexor automatically
     {
-        *multiplexor_ = signal_groups_.at(multiplexor_index_)->multiplexor_value_;
+        *multiplexor_ = static_cast<MultiplexorType>(signal_groups_.at(multiplexor_index_)->multiplexor_value_);
         EncodeSignals();
         can_interface_.SendMessage(message_);
         if (multiplexor_index_ < num_groups - 1)
@@ -700,7 +700,7 @@ public:
         size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
         for (size_t i = 0; i < num_groups; i++)
         {
-            if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
+            if (static_cast<uint64_t>(multiplexor_value) == signal_groups_.at(i)->multiplexor_value_)
             {
                 multiplexor_index = i;
                 break;
@@ -926,11 +926,24 @@ public:
     void DecodeSignals(CANMessage message)
     {
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+
+        if (has_always_active_signal_group_)
+        {
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
+            {
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
+                    ->at(i)
+                    ->DecodeSignal(&temp_raw);
+            }
+        }
+
         multiplexor_->DecodeSignal(&temp_raw);
         size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
         for (size_t i = 0; i < num_groups; i++)
         {
-            if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
+            MultiplexorType multiplexor_value = *multiplexor_;
+            if (static_cast<uint64_t>(multiplexor_value) == signal_groups_.at(i)->multiplexor_value_)
             {
                 multiplexor_index = i;
                 break;
@@ -943,16 +956,6 @@ public:
         for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index)->size(); i++)
         {
             signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&temp_raw);
-        }
-        if (has_always_active_signal_group_)
-        {
-            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
-                 i++)
-            {
-                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
-                    ->at(i)
-                    ->DecodeSignal(&temp_raw);
-            }
         }
 
         // DecodeSignals is called only on message received
