@@ -694,6 +694,27 @@ public:
         }
     }
 
+    // TODO(joshua) improve probably
+    void EncodeAndSend(MultiplexorType multiplexor_value)
+    {
+        size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
+        for (size_t i = 0; i < num_groups; i++)
+        {
+            if (*multiplexor_ == signal_groups_.at(i)->multiplexor_value_)
+            {
+                multiplexor_index = i;
+                break;
+            }
+        }
+        if (multiplexor_index == 0xFFFFFFFFul)
+        {
+            return;  // error
+        }
+        multiplexor_index_ = (multiplexor_index);
+
+        EncodeAndSend();
+    }
+
     uint32_t GetID() { return message_.id_; }
 
 #if !defined(NATIVE)  // workaround for unit tests
