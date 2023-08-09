@@ -3,14 +3,15 @@
 
 #include <cstring>
 
-CAN_device_t CAN_cfg;  // CAN Config
+#include "driver/gpio.h"
+#include "driver/twai.h"
 
 std::vector<ICANRXMessage *> ESPCAN::rx_messages_{};
 
-ESPCAN::ESPCAN(uint8_t rx_queue_size, gpio_num_t tx, gpio_num_t rx) : kRxQueueSize{rx_queue_size}
+ESPCAN::ESPCAN(uint8_t rx_queue_size, gpio_num_t tx, gpio_num_t rx)
 {
-    CAN_cfg.tx_pin_id = tx;
-    CAN_cfg.rx_pin_id = rx;
+    g_config = TWAI_GENERAL_CONFIG_DEFAULT(tx, rx, TWAI_MODE_NORMAL);
+    g_config.rx_queue_len = rx_queue_size;
 }
 
 void ESPCAN::Initialize(BaudRate baud)
@@ -18,64 +19,92 @@ void ESPCAN::Initialize(BaudRate baud)
     switch (baud)
     {
         case BaudRate::kBaud125k:
-            CAN_cfg.speed = CAN_speed_t::CAN_SPEED_125KBPS;
+            t_config = TWAI_TIMING_CONFIG_125KBITS();
             break;
         case BaudRate::kBaud250K:
-            CAN_cfg.speed = CAN_speed_t::CAN_SPEED_250KBPS;
+            t_config = TWAI_TIMING_CONFIG_250KBITS();
             break;
         case BaudRate::kBaud500K:
-            CAN_cfg.speed = CAN_speed_t::CAN_SPEED_500KBPS;
+            t_config = TWAI_TIMING_CONFIG_500KBITS();
             break;
         case BaudRate::kBaud1M:
-            CAN_cfg.speed = CAN_speed_t::CAN_SPEED_1000KBPS;
+            t_config = TWAI_TIMING_CONFIG_1MBITS();
             break;
     }
 
-    CAN_cfg.rx_queue = xQueueCreate(kRxQueueSize, sizeof(CAN_frame_t));
-    // CAN_cfg.rx_handle = xTaskCreate(&ProcessReceive, "Process CAN Receive", 200, NULL, 5, NULL);
-    //  Init CAN Module
-    ESP32Can.CANInit();
+    // Install TWAI driver
+    if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK)
+    {
+        printf("TWAI driver installed\n");
+    }
+    else
+    {
+        printf("Failed to install TWAI driver\n");
+        return;
+    }
+
+    // Start TWAI driver
+    if (twai_start() == ESP_OK)
+    {
+        printf("TWAI driver started\n");
+    }
+    else
+    {
+        printf("Failed to start TWAI driver\n");
+        return;
+    }
 }
 
 bool ESPCAN::SendMessage(CANMessage &msg)
 {
-    CAN_frame_t tx_frame;
-    tx_frame.FIR.B.FF = msg.extended_id_ ? CAN_frame_ext : CAN_frame_std;
-    tx_frame.FIR.B.RTR = CAN_no_RTR;
+    static twai_message_t t_message;
+    t_message.identifier = msg.id_;
+    t_message.extd = msg.extended_id_;
+    t_message.data_length_code = msg.len_;
+    t_message.rtr = 0;
     bool ret = false;
-
-    tx_frame.MsgID = msg.id_;
-    tx_frame.FIR.B.DLC = msg.len_;
 
     for (int i = 0; i < msg.len_; i++)
     {
-        tx_frame.data.u8[i] = msg.data_[i];
+        t_message.data[i] = msg.data_[i];
     }
 
-    ret = (ESP32Can.CANWriteFrame(&tx_frame, TickType_t(10)) != -1);
-
-    return ret;
+    return twai_transmit(&t_message, TickType_t(10)) == ESP_OK;
 }
 
 void ESPCAN::Tick()
 {
-    std::array<uint8_t, 8> msg_data{};
-    CANMessage received_message{0, 8, msg_data};
-    CAN_frame_t rx_frame;
+    static std::array<uint8_t, 8> msg_data{};
+    static CANMessage received_message{0, 8, msg_data};
+    static twai_message_t r_message;
+    static twai_status_info_t status;
+    twai_get_status_info(&status);
 
-    while ((xQueueReceive(CAN_cfg.rx_queue, &rx_frame, 3 * portTICK_PERIOD_MS) == pdTRUE))
+    if (status.state == TWAI_STATE_BUS_OFF)
     {
-        received_message.id_ = rx_frame.MsgID;
-        received_message.len_ = rx_frame.FIR.B.DLC;
+        twai_initiate_recovery();
+    }
 
-        memcpy(received_message.data_.data(), rx_frame.data.u8, 8);
-
-        for (size_t i = 0; i < rx_messages_.size(); i++)
+    while (status.msgs_to_rx > 0)
+    {
+        if (twai_receive(&r_message, TickType_t(100)) == ESP_OK)
         {
-            if (rx_messages_[i]->GetID() == received_message.id_)
+            received_message.id_ = r_message.identifier;
+            received_message.len_ = r_message.data_length_code;
+
+            memcpy(received_message.data_.data(), r_message.data, 8);
+
+            for (size_t i = 0; i < rx_messages_.size(); i++)
             {
-                rx_messages_[i]->DecodeSignals(received_message);
+                if (rx_messages_[i]->GetID() == received_message.id_)
+                {
+                    rx_messages_[i]->DecodeSignals(received_message);
+                }
             }
+        }
+        else
+        {
+            printf("Failed to read message from queue\n");
         }
     }
 }
