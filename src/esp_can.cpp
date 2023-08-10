@@ -85,6 +85,11 @@ void ESPCAN::Tick()
         twai_initiate_recovery();
     }
 
+    if (status.state == TWAI_STATE_STOPPED)
+    {
+        twai_start();
+    }
+
     while (status.msgs_to_rx > 0)
     {
         if (twai_receive(&r_message, TickType_t(100)) == ESP_OK)
@@ -106,6 +111,7 @@ void ESPCAN::Tick()
         {
             printf("Failed to read message from queue\n");
         }
+        twai_get_status_info(&status);
     }
 }
 
