@@ -57,12 +57,18 @@ void ESPCAN::Initialize(BaudRate baud)
 
 bool ESPCAN::SendMessage(CANMessage &msg)
 {
+    static twai_status_info_t status;
+    twai_get_status_info(&status);
+    if (status.state != TWAI_STATE_RUNNING)
+    {
+        return false;
+    }
+
     static twai_message_t t_message;
     t_message.identifier = msg.id_;
     t_message.extd = msg.extended_id_;
     t_message.data_length_code = msg.len_;
     t_message.rtr = 0;
-    bool ret = false;
 
     for (int i = 0; i < msg.len_; i++)
     {
