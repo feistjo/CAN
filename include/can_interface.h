@@ -15,6 +15,12 @@
 #include "virtualTimer.h"
 #endif
 
+#ifdef FREERTOS_ATOMIC_IMPL
+#include "freertos_atomic.h"
+#else
+#define Atomic std::atomic
+#endif
+
 #ifdef ARDUINO
 #include <Arduino.h>
 #endif
@@ -104,7 +110,7 @@ template <typename SignalType>
 class ITypedCANSignal : public ICANSignal
 {
 public:
-    std::atomic<SignalType> &value_ref() { return signal_; }
+    Atomic<SignalType> &value_ref() { return signal_; }
 
     operator SignalType() const { return signal_; }
 
@@ -127,7 +133,7 @@ public:
     bool operator<=(const SignalType &signal) { return signal_ <= signal; }
 
 protected:
-    std::atomic<SignalType> signal_;
+    Atomic<SignalType> signal_;
 };
 
 // Needed so compiler knows these template classes exist
@@ -336,7 +342,6 @@ public:
 #if !defined(NATIVE)  // workaround for unit tests
     virtual VirtualTimer &GetTransmitTimer() = 0;
 #endif
-    virtual void EncodeSignals() = 0;
     virtual void EncodeAndSend() = 0;
 };
 
@@ -551,7 +556,7 @@ private:
     VirtualTimer transmit_timer_;
     std::array<ICANSignal *, num_signals> signals_;
 
-    void EncodeSignals() override
+    void EncodeSignals()
     {
         uint8_t temp_raw[8]{0};
         for (uint8_t i = 0; i < num_signals; i++)
@@ -562,7 +567,7 @@ private:
     }
 };
 
-template <size_t num_groups, typename MultiplexorType>
+template <size_t num_groups, size_t num_multiplexors_to_transmit, typename MultiplexorType>
 class MultiplexedCANTXMessage : public ICANTXMessage
 {
 public:
@@ -583,6 +588,7 @@ public:
                             bool extended_id,
                             uint8_t length,
                             uint32_t period,
+                            std::array<MultiplexorType, num_multiplexors_to_transmit> multiplexor_values_to_transmit,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
                             Ts &... signal_groups)
         : can_interface_{can_interface},
@@ -590,6 +596,7 @@ public:
 #if !defined(NATIVE)  // workaround for unit tests
           transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
 #endif
+          multiplexor_values_to_transmit_{multiplexor_values_to_transmit},
           multiplexor_{&multiplexor},
           signal_groups_{&signal_groups...}
     {
@@ -621,9 +628,11 @@ public:
                             uint32_t id,
                             uint8_t length,
                             uint32_t period,
+                            std::array<MultiplexorType, num_multiplexors_to_transmit> multiplexor_values_to_transmit,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
                             Ts &... signal_groups)
-        : MultiplexedCANTXMessage(can_interface, id, false, length, period, multiplexor, signal_groups...)
+        : MultiplexedCANTXMessage(
+            can_interface, id, false, length, period, multiplexor_values_to_transmit, multiplexor, signal_groups...)
     {
     }
 
@@ -646,9 +655,17 @@ public:
                             uint8_t length,
                             uint32_t period,
                             VirtualTimerGroup &timer_group,
+                            std::array<MultiplexorType, num_multiplexors_to_transmit> multiplexor_values_to_transmit,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
                             Ts &... signal_groups)
-        : MultiplexedCANTXMessage(can_interface, id, extended_id, length, period, multiplexor, signal_groups...)
+        : MultiplexedCANTXMessage(can_interface,
+                                  id,
+                                  extended_id,
+                                  length,
+                                  period,
+                                  multiplexor_values_to_transmit,
+                                  multiplexor,
+                                  signal_groups...)
     {
 #if !defined(NATIVE)  // workaround for unit tests
         timer_group.AddTimer(transmit_timer_);
@@ -673,18 +690,27 @@ public:
                             uint8_t length,
                             uint32_t period,
                             VirtualTimerGroup &timer_group,
+                            std::array<MultiplexorType, num_multiplexors_to_transmit> multiplexor_values_to_transmit,
                             ITypedCANSignal<MultiplexorType> &multiplexor,
                             Ts &... signal_groups)
-        : MultiplexedCANTXMessage(can_interface, id, false, length, period, timer_group, multiplexor, signal_groups...)
+        : MultiplexedCANTXMessage(can_interface,
+                                  id,
+                                  false,
+                                  length,
+                                  period,
+                                  timer_group,
+                                  multiplexor_values_to_transmit,
+                                  multiplexor,
+                                  signal_groups...)
     {
     }
 
     void EncodeAndSend() override  // increments multiplexor automatically
     {
-        *multiplexor_ = static_cast<MultiplexorType>(signal_groups_.at(multiplexor_index_)->multiplexor_value_);
-        EncodeSignals();
+        *multiplexor_ = multiplexor_values_to_transmit_[multiplexor_index_];
+        EncodeSignals(GetSignalGroupIndex(*multiplexor_));
         can_interface_.SendMessage(message_);
-        if (multiplexor_index_ < num_groups - 1)
+        if (multiplexor_index_ < num_multiplexors_to_transmit - 1)
         {
             multiplexor_index_ += 1;
         }
@@ -694,25 +720,11 @@ public:
         }
     }
 
-    // TODO(joshua) improve probably
     void EncodeAndSend(MultiplexorType multiplexor_value)
     {
-        size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
-        for (size_t i = 0; i < num_groups; i++)
-        {
-            if (static_cast<uint64_t>(multiplexor_value) == signal_groups_.at(i)->multiplexor_value_)
-            {
-                multiplexor_index = i;
-                break;
-            }
-        }
-        if (multiplexor_index == 0xFFFFFFFFul)
-        {
-            return;  // error
-        }
-        multiplexor_index_ = (multiplexor_index);
-
-        EncodeAndSend();
+        *multiplexor_ = multiplexor_value;
+        EncodeSignals(GetSignalGroupIndex(*multiplexor_));
+        can_interface_.SendMessage(message_);
     }
 
     uint32_t GetID() { return message_.id_; }
@@ -734,6 +746,7 @@ private:
 #if !defined(NATIVE)  // workaround for unit tests
     VirtualTimer transmit_timer_;
 #endif
+    std::array<MultiplexorType, num_multiplexors_to_transmit> multiplexor_values_to_transmit_;
     ITypedCANSignal<MultiplexorType> *multiplexor_;
     std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
     bool has_always_active_signal_group_{false};
@@ -741,14 +754,24 @@ private:
 
     uint64_t multiplexor_index_ = 0;
 
-    void EncodeSignals()
+    uint64_t GetSignalGroupIndex(MultiplexorType multiplexor_value)
+    {
+        size_t index = 0xFFFFFFFFul;  // init to invalid value
+        for (size_t i = 0; i < num_groups; i++)
+        {
+            if (static_cast<uint64_t>(multiplexor_value) == signal_groups_.at(i)->multiplexor_value_)
+            {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+
+    void EncodeSignals(uint64_t signal_group_index)
     {
         uint8_t temp_raw[8]{0};
         multiplexor_->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
-        for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index_)->size(); i++)
-        {
-            signal_groups_.at(multiplexor_index_)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
-        }
         if (has_always_active_signal_group_)
         {
             for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
@@ -759,6 +782,14 @@ private:
                     ->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
             }
         }
+        if (signal_group_index != 0xFFFFFFFFul)  // not invalid value
+        {
+            for (uint8_t i = 0; i < signal_groups_.at(signal_group_index)->size(); i++)
+            {
+                signal_groups_.at(signal_group_index)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+            }
+        }
+
         std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
     }
 };
@@ -949,6 +980,7 @@ public:
                 break;
             }
         }
+
         if (multiplexor_index == 0xFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
         {
             return;
