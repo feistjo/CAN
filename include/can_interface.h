@@ -42,6 +42,50 @@ public:
     std::array<uint8_t, 8> data_;
 };
 
+class PGNCANMessage : public CANMessage
+{
+public:
+    union PGN
+    {
+        uint32_t raw;
+        struct
+        {
+            bool reserved : 1;
+            bool data_page : 1;
+            uint8_t pdu_format : 8;
+            uint8_t pdu_specific : 8;
+        } pgn;
+        PGN() = default;
+        operator uint32_t() const { return raw; }
+        PGN(uint32_t r) : raw{r} {}
+        PGN(bool data_page, uint8_t pdu_format, uint8_t pdu_specific)
+            : pgn{.reserved = 0, .data_page = data_page, .pdu_format = pdu_format, .pdu_specific = pdu_specific}
+        {
+        }
+    };
+
+    union ExtendedId
+    {
+        uint32_t raw;
+        struct
+        {
+            uint8_t priority : 3;
+            uint32_t pgn : 18;
+            uint8_t source_address : 8;
+        } extended_id;
+        ExtendedId() = default;
+        operator uint32_t() const { return raw; }
+        ExtendedId(uint32_t r) : raw{r} {}
+        ExtendedId(uint8_t priority, PGN pgn, uint8_t source_address)
+            : extended_id{.priority = static_cast<uint8_t>(priority & 0b11),
+                          .pgn = static_cast<uint32_t>(pgn & 0x3FFFF),
+                          .source_address = source_address}
+        {
+        }
+    };
+    PGNCANMessage(ExtendedId id, uint8_t len, std::array<uint8_t, 8> data) : CANMessage{id, true, len, data} {}
+};
+
 class ICANSignal
 {
 public:
@@ -349,7 +393,7 @@ class ICANRXMessage
 {
 public:
     virtual uint32_t GetID() = 0;
-    virtual void DecodeSignals(CANMessage message) = 0;
+    virtual void DecodeSignals(CANMessage message) = 0;  // Decodes signals if ID matches
 };
 
 class ICAN
@@ -794,6 +838,91 @@ private:
     }
 };
 
+template <size_t num_signals>
+class PGNCANTXMessage : public ICANTXMessage
+{
+public:
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param signals The ICANSignals contained in the message
+     */
+    PGNCANTXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    uint8_t length,
+                    uint32_t period,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : can_interface_{can_interface},
+          message_{id, length, std::array<uint8_t, 8>()},
+          transmit_timer_{period, [this]() { this->EncodeAndSend(); }, VirtualTimer::Type::kRepeating},
+          signals_{&signal_1, &signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into PGNCANTXMessage.");
+    }
+
+    template <typename... Ts>
+    /**
+     * @brief Construct a new CANTXMessage object and automatically adds it to a VirtualTimerGroup
+     *
+     * @param can_interface The ICAN object the message will be transmitted on
+     * @param id The ID of the CAN message
+     * @param extended_id Whether the ID is extended (true) or standard (false)
+     * @param length The length in bytes of the message
+     * @param period The transmit period in ms of the message
+     * @param start_time The time in ms to start transmitting the message
+     * @param timer_group A timer group to add the transmit timer to
+     * @param signals The ICANSignals contained in the message
+     */
+    PGNCANTXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    uint8_t length,
+                    uint32_t period,
+                    VirtualTimerGroup &timer_group,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : PGNCANTXMessage(can_interface, id, length, period, signal_1, signals...)
+    {
+        timer_group.AddTimer(transmit_timer_);
+    }
+
+    void EncodeAndSend() override
+    {
+        EncodeSignals();
+        can_interface_.SendMessage(message_);
+    }
+
+    uint32_t GetID() override { return message_.id_; }
+
+    VirtualTimer &GetTransmitTimer() override { return transmit_timer_; }
+
+    void Enable() { transmit_timer_.Enable(); }
+    void Disable() { transmit_timer_.Disable(); }
+
+private:
+    ICAN &can_interface_;
+    PGNCANMessage message_;
+    VirtualTimer transmit_timer_;
+    std::array<ICANSignal *, num_signals> signals_;
+
+    void EncodeSignals()
+    {
+        uint8_t temp_raw[8]{0};
+        for (uint8_t i = 0; i < num_signals; i++)
+        {
+            signals_.at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+        }
+        std::copy(std::begin(temp_raw), std::end(temp_raw), message_.data_.begin());
+    }
+};
+
 /**
  * @brief A class for storing signals that get updated every time a matching message is received
  */
@@ -852,6 +981,10 @@ public:
 
     void DecodeSignals(CANMessage message)
     {
+        if (message.id_ != id_)
+        {
+            return;
+        }
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
         for (uint8_t i = 0; i < num_signals; i++)
         {
@@ -956,6 +1089,11 @@ public:
 
     void DecodeSignals(CANMessage message)
     {
+        if (message.id_ != id_)
+        {
+            return;
+        }
+
         uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
 
         if (has_always_active_signal_group_)
@@ -1017,6 +1155,102 @@ private:
     uint64_t always_active_signal_group_index_{0};
 
     uint64_t multiplexor_index{0};
+
+    uint64_t raw_message;
+
+    uint32_t last_receive_time_ = 0;
+};
+
+template <size_t num_signals>
+class PGNCANRXMessage : public ICANRXMessage
+{
+public:
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<uint32_t(void)> get_millis,
+                    std::function<void(void)> callback_function,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          signals_{&signal_1, &signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANRXMessage.");
+        can_interface_.RegisterRXMessage(*this);
+    }
+
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<uint32_t(void)> get_millis,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, get_millis, nullptr, signal_1, signals...}
+    {
+    }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<void(void)> callback_function,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signal_1, signals...}
+    {
+    }
+
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface, PGNCANMessage::ExtendedId id, ICANSignal &signal_1, Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
+    {
+    }
+#endif
+
+    uint32_t GetID() { return id_; }
+
+    void DecodeSignals(CANMessage message)
+    {
+        PGNCANMessage::PGN incoming_pgn =
+            static_cast<PGNCANMessage::PGN>(static_cast<PGNCANMessage::ExtendedId>(message.id_).extended_id.pgn);
+        PGNCANMessage::PGN pgn = static_cast<PGNCANMessage::PGN>(id_.extended_id.pgn);
+        if (incoming_pgn.raw != pgn.raw)
+        {
+            return;
+        }
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        for (uint8_t i = 0; i < num_signals; i++)
+        {
+            signals_[i]->DecodeSignal(&temp_raw);
+        }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+
+        last_receive_time_ = get_millis_();
+    }
+
+    uint32_t GetLastReceiveTime() const { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
+
+private:
+    ICAN &can_interface_;
+    PGNCANMessage::ExtendedId id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
+    std::array<ICANSignal *, num_signals> signals_;
 
     uint64_t raw_message;
 

@@ -107,10 +107,7 @@ void ESPCAN::Tick()
 
             for (size_t i = 0; i < rx_messages_.size(); i++)
             {
-                if (rx_messages_[i]->GetID() == received_message.id_)
-                {
-                    rx_messages_[i]->DecodeSignals(received_message);
-                }
+                rx_messages_[i]->DecodeSignals(received_message);
             }
         }
         else
