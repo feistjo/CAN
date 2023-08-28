@@ -132,6 +132,24 @@ public:
 
     bool operator<=(const SignalType &signal) { return signal_ <= signal; }
 
+    void operator=(const ITypedCANSignal<SignalType> &signal) { signal_ = signal; }
+
+    SignalType operator+=(const ITypedCANSignal<SignalType> &signal) { return signal_ = signal_ + signal; }
+
+    SignalType operator-=(const ITypedCANSignal<SignalType> &signal) { return signal_ = signal_ - signal; }
+
+    SignalType operator*=(const ITypedCANSignal<SignalType> &signal) { return signal_ = signal_ * signal; }
+
+    SignalType operator/=(const ITypedCANSignal<SignalType> &signal) { return signal_ = signal_ / signal; }
+
+    bool operator>(const ITypedCANSignal<SignalType> &signal) { return signal_ > signal; }
+
+    bool operator<(const ITypedCANSignal<SignalType> &signal) { return signal_ < signal; }
+
+    bool operator>=(const ITypedCANSignal<SignalType> &signal) { return signal_ >= signal; }
+
+    bool operator<=(const ITypedCANSignal<SignalType> &signal) { return signal_ <= signal; }
+
 protected:
     Atomic<SignalType> signal_;
 };
