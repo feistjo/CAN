@@ -745,10 +745,10 @@ public:
         can_interface_.SendMessage(message_);
     }
 
-    uint32_t GetID() { return message_.id_; }
+    uint32_t GetID() override { return message_.id_; }
 
 #if !defined(NATIVE)  // workaround for unit tests
-    VirtualTimer &GetTransmitTimer() { return transmit_timer_; }
+    VirtualTimer &GetTransmitTimer() override { return transmit_timer_; }
 #endif
 
     void Enable()
