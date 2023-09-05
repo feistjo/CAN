@@ -50,16 +50,16 @@ public:
         uint32_t raw;
         struct
         {
-            bool reserved : 1;
-            bool data_page : 1;
-            uint8_t pdu_format : 8;
             uint8_t pdu_specific : 8;
+            uint8_t pdu_format : 8;
+            bool data_page : 1;
+            bool reserved : 1;
         } pgn;
         PGN() = default;
         operator uint32_t() const { return raw; }
         PGN(uint32_t r) : raw{r} {}
         PGN(bool data_page, uint8_t pdu_format, uint8_t pdu_specific)
-            : pgn{.reserved = 0, .data_page = data_page, .pdu_format = pdu_format, .pdu_specific = pdu_specific}
+            : pgn{.pdu_specific = pdu_specific, .pdu_format = pdu_format, .data_page = data_page, .reserved = 0}
         {
         }
     };
@@ -69,17 +69,19 @@ public:
         uint32_t raw;
         struct
         {
-            uint8_t priority : 3;
-            uint32_t pgn : 18;
             uint8_t source_address : 8;
+            uint32_t pgn : 18;
+            uint8_t priority : 3;
         } extended_id;
         ExtendedId() = default;
         operator uint32_t() const { return raw; }
         ExtendedId(uint32_t r) : raw{r} {}
-        ExtendedId(uint8_t priority, PGN pgn, uint8_t source_address)
-            : extended_id{.priority = static_cast<uint8_t>(priority & 0b11),
+        ExtendedId(uint8_t source_address, PGN pgn, uint8_t priority)
+            : extended_id{.source_address = source_address,
                           .pgn = static_cast<uint32_t>(pgn & 0x3FFFF),
-                          .source_address = source_address}
+                          .priority = static_cast<uint8_t>(priority & 0b11)
+
+            }
         {
         }
     };
