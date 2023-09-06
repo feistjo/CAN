@@ -725,7 +725,7 @@ public:
 
     void EncodeAndSend() override  // increments multiplexor automatically
     {
-        *multiplexor_ = multiplexor_values_to_transmit_[multiplexor_index_];
+        *multiplexor_ = multiplexor_values_to_transmit_.at(static_cast<size_t>(multiplexor_index_));
         EncodeSignals(GetSignalGroupIndex(*multiplexor_));
         can_interface_.SendMessage(message_);
         if (multiplexor_index_ < num_multiplexors_to_transmit - 1)
@@ -802,9 +802,11 @@ private:
         }
         if (signal_group_index != 0xFFFFFFFFul)  // not invalid value
         {
-            for (uint8_t i = 0; i < signal_groups_.at(signal_group_index)->size(); i++)
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(signal_group_index))->size(); i++)
             {
-                signal_groups_.at(signal_group_index)->at(i)->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
+                signal_groups_.at(static_cast<size_t>(signal_group_index))
+                    ->at(i)
+                    ->EncodeSignal(reinterpret_cast<uint64_t *>(temp_raw));
             }
         }
 
