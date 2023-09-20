@@ -184,10 +184,7 @@ def on_upload(source, target, env):
                 bar.update(4096)
                 # time.sleep(0.1)
 
-        # for b in tqdm(firmware.read()):
-        #    time.sleep(0.1)
-        # with can.Bus() as bus:
-        #    pass
+        can_bus.shutdown()
 
 try:
     if env.GetProjectOption("upload_can") == "y":
