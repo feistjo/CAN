@@ -26,3 +26,14 @@ This code base currently includes the following hardware platforms:
 More support to come in the future.
 
 We would also like to thank our sponsor [Innomaker](https://www.inno-maker.com/product/usb2can-cable/) for supporting us with their products for the 22-23 season!
+
+### Updates
+
+This code has support for uploading new code to the ESP32 over CAN. To use this feature, add
+    upload_protocol = custom
+    upload_can = y
+to the env in platformio.ini, and also add
+    [can_update]
+    update_baud = 500000
+    update_message_id = 0x530
+to platformio.ini

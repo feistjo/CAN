@@ -96,7 +96,7 @@ private:
             update_block_idx_ = 0;
             update_started_ = true;
             written_ = false;
-            // update_progress_message_.EncodeAndSend();
+            update_progress_message_.EncodeAndSend();
             update_progress_message_.Enable();
           }
         } else if (update_started_ &&

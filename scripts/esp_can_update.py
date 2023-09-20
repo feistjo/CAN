@@ -128,7 +128,7 @@ def on_upload(source, target, env):
                 )
             )
             time.sleep(0.01)
-            msg = can_bus.recv(0.1)
+            msg = can_bus.recv(0.05)
             if (msg != None) and msg.arbitration_id == progress_message.frame_id:
                 received_progress_msg = db.decode_message(
                     "update_progress_message", msg.data
@@ -189,6 +189,8 @@ def on_upload(source, target, env):
         # with can.Bus() as bus:
         #    pass
 
-
-if env.GetProjectOption("upload_can") == "y":
-    DefaultEnvironment().Replace(UPLOADCMD=on_upload)
+try:
+    if env.GetProjectOption("upload_can") == "y":
+        DefaultEnvironment().Replace(UPLOADCMD=on_upload)
+except:
+    pass
