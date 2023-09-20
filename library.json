@@ -3,5 +3,8 @@
   "version": "0.0.0+20220926210002",
   "dependencies": {
     "timers": "https://github.com/NU-Formula-Racing/timers.git"
+  },
+  "build": {
+    "extraScript": "scripts/esp_can_update.py"
   }
 }
