@@ -32,7 +32,10 @@ void ESPCAN::Initialize(BaudRate baud)
             break;
     }
 
-    // Install TWAI driver
+// Install TWAI driver
+#if defined(CONFIG_TWAI_ISR_IN_IRAM) and CONFIG_TWAI_ISR_IN_IRAM
+    g_config.intr_flags |= ESP_INTR_FLAG_IRAM;
+#endif
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK)
     {
         printf("TWAI driver installed\n");
