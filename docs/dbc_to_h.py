@@ -19,7 +19,7 @@ def get_data_type(signed, length, factor, offset):
         return "int" + str(64 if length > 32 else 32 if length > 16 else 16 if length > 8 else 8) + "_t"
 
 
-def dbc_to_h(dbc_file, h_file):
+def dbc_to_h(dbc_file, h_file, get_millis):
     # Load the DBC file
     db = cantools.database.load_file(dbc_file)
 
@@ -60,7 +60,7 @@ def dbc_to_h(dbc_file, h_file):
                 found = False
                 if signal.multiplexer_ids == None:
                     for i in range(len(signals)):
-                        if signals[i][0].equals("true"):
+                        if signals[i][0] == "true":
                             signals[i].append(signal.name + "_Signal_")
                             found = True
                             continue
@@ -85,11 +85,11 @@ def dbc_to_h(dbc_file, h_file):
                 signal_groups.append(message.name + "_SignalGroup_" + str(i) + "_")
             #MultiplexedCANTXMessage<2, uint8_t> tx_msg{can, 100, 8, 100, tx_multiplexor, tx_signals_0, tx_signals_1};
             rx_message = signal_groups_str
-            rx_message += "MultiplexedCANRXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + multiplexor_signal_str + ", " + ', '.join(signal_groups) + "};\n"
-            tx_message = "MultiplexedCANTXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset)  + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "")  + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group, " + multiplexor_signal_str + ", " + ', '.join(signal_groups) +  "};\n"
+            rx_message += "MultiplexedCANRXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ((get_millis + ", ") if get_millis != None else "") + multiplexor_signal_str + ", " + ', '.join(signal_groups) + "};\n"
+            tx_message = "MultiplexedCANTXMessage<" + str(len(signal_groups)) + ", " + get_data_type(multiplexor_signal.is_signed, multiplexor_signal.length, multiplexor_signal.scale, multiplexor_signal.offset)  + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "")  + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group_, " + multiplexor_signal_str + ", " + ', '.join(signal_groups) +  "};\n"
         else:
-            rx_message = "CANRXMessage<" + str(len(signals)) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ', '.join(signals) + "};\n"
-            tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "") + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group, " + ', '.join(signals) + "};\n"
+            rx_message = "CANRXMessage<" + str(len(signals)) + "> " + message.name + "_RX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ((get_millis + ", ") if get_millis != None else "") + ', '.join(signals) + "};\n"
+            tx_message = "CANTXMessage<" + str(len(signals)) + "> " + message.name + "_TX_Message_{can_bus_, 0x" + format(message.frame_id, 'x') + ", " + ("true, " if message.is_extended_frame else "") + str(message.length) + ", " + ("0" if message.cycle_time == None else str(message.cycle_time)) + ", timer_group_, " + ', '.join(signals) + "};\n"
         rx_messages += rx_message
         tx_messages += tx_message
     with open(h_file, 'a') as file:
@@ -99,12 +99,13 @@ def dbc_to_h(dbc_file, h_file):
         file.write(tx_messages)
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python dbc_to_h.py <input_dbc_file> <output_h_file>")
+    if len(sys.argv) != 3 and len(sys.argv) != 4:
+        print("Usage: python dbc_to_h.py <input_dbc_file> <output_h_file> <optional_get_millis>")
         sys.exit(1)
 
     dbc_file = sys.argv[1]
     h_file = sys.argv[2]
+    get_millis = sys.argv[3] if len(sys.argv) == 4 else None
 
-    dbc_to_h(dbc_file, h_file)
+    dbc_to_h(dbc_file, h_file, get_millis)
     print(f"Converted {dbc_file} to {h_file}")
