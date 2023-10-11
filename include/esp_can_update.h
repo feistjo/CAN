@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ARDUINO_ARCH_ESP32
+
 #include <Arduino.h>
 #include <Update.h>
 
@@ -150,3 +152,4 @@ private:
         data_signal_group_,
         md5_signal_group_};
 };
+#endif
