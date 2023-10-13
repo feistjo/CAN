@@ -123,6 +123,7 @@ constexpr uint8_t CANSignal_generate_position(uint8_t position, uint8_t length, 
                              : ((length - (8 - (position % 8)) /* bits_in_last_byte */) / 8) /* full_bytes */ + 1))
                      + (8 - ((length - (8 - (position % 8)) /* bits_in_last_byte */) % 8) /* remaining_bits */)
                      - (8 - (position % 8)) /* bits_in_last_byte */));
+
     /* //Expanded version because the nested ternary operators are incomprehensible, but they are required for C++11
         if (byte_order == ICANSignal::ByteOrder::kLittleEndian)
         {
@@ -438,6 +439,70 @@ public:
     virtual void RegisterRXMessage(ICANRXMessage &msg) = 0;
 
     virtual void Tick() = 0;
+};
+
+class MockCAN : public ICAN
+{
+public:
+    void Initialize(BaudRate baud __attribute__((unused))) {}
+    bool SendMessage(CANMessage &msg)
+    {
+        /* for (size_t i = 0; i < rx_messages_.size(); i++)
+        {
+            if (rx_messages_[i]->GetID() == msg.id_)
+            {
+                rx_messages_[i]->DecodeSignals(msg);
+            }
+        } */
+        last_message = msg;
+        return true;
+    }
+    void RegisterRXMessage(ICANRXMessage &msg __attribute__((unused)))
+    { /* rx_messages_.push_back(&msg); */
+    }
+    void Tick() {}
+
+    CANMessage last_message{0, 8, std::array<uint8_t, 8>{0}};
+
+private:
+    // std::vector<ICANRXMessage *> rx_messages_; //not working in native unit tests
+};
+
+class IMultiplexedSignalGroup
+{
+public:
+    virtual ICANSignal *at(size_t index) = 0;
+    virtual size_t size() const = 0;
+
+    uint64_t multiplexor_value_{0};
+    bool always_active_{false};
+};
+
+template <size_t num_signals>
+class MultiplexedSignalGroup : public std::array<ICANSignal *, num_signals>, public IMultiplexedSignalGroup
+{
+public:
+    template <typename... Ts>
+    MultiplexedSignalGroup(uint64_t multiplexor_value, Ts &... signals)
+        : std::array<ICANSignal *, num_signals>{&signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
+        multiplexor_value_ = multiplexor_value;
+        always_active_ = false;
+    }
+
+    template <typename... Ts>
+    MultiplexedSignalGroup(bool always_active, uint64_t multiplexor_value, Ts &... signals)
+        : std::array<ICANSignal *, num_signals>{&signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals, "Wrong number of signals passed into SignalGroup.");
+        multiplexor_value_ = multiplexor_value;
+        always_active_ = always_active;
+    }
+
+    ICANSignal *at(size_t index) override { return std::array<ICANSignal *, num_signals>::at(index); }
+
+    size_t size() const override { return std::array<ICANSignal *, num_signals>::size(); }
 };
 
 /**
@@ -1042,6 +1107,244 @@ public:
 private:
     ICAN &can_interface_;
     uint32_t id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
+    std::array<ICANSignal *, num_signals> signals_;
+
+    uint64_t raw_message;
+
+    uint32_t last_receive_time_ = 0;
+};
+
+template <size_t num_groups, typename MultiplexorType>
+class MultiplexedCANRXMessage : public ICANRXMessage
+{
+public:
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<uint32_t(void)> get_millis,
+                            std::function<void(void)> callback_function,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &... signal_groups)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          multiplexor_{&multiplexor},
+          signal_groups_{&signal_groups...}
+    {
+        static_assert(sizeof...(signal_groups) == num_groups,
+                      "Wrong number of SignalGroups passed into MultiplexedCANRXMessage.");
+        can_interface_.RegisterRXMessage(*this);
+        for (size_t i = 0; i < signal_groups_.size(); i++)
+        {
+            if (signal_groups_.at(i)->always_active_)
+            {
+                has_always_active_signal_group_ = true;
+                always_active_signal_group_index_ = i;
+                break;
+            }
+        }
+    }
+
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<uint32_t(void)> get_millis,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &... signal_groups)
+        : MultiplexedCANRXMessage{can_interface, id, get_millis, nullptr, multiplexor, signal_groups...}
+    {
+    }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            std::function<void(void)> callback_function,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &... signal_groups)
+        : MultiplexedCANRXMessage{
+            can_interface, id, []() { return millis(); }, callback_function, multiplexor, signal_groups...}
+    {
+    }
+
+    template <typename... Ts>
+    MultiplexedCANRXMessage(ICAN &can_interface,
+                            uint32_t id,
+                            ITypedCANSignal<MultiplexorType> &multiplexor,
+                            Ts &... signal_groups)
+        : MultiplexedCANRXMessage{can_interface, id, []() { return millis(); }, nullptr, multiplexor, signal_groups...}
+    {
+    }
+#endif
+
+    uint32_t GetID() { return id_; }
+
+    void DecodeSignals(CANMessage message)
+    {
+        if (message.id_ != id_)
+        {
+            return;
+        }
+
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+
+        if (has_always_active_signal_group_)
+        {
+            for (uint8_t i = 0; i < signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))->size();
+                 i++)
+            {
+                signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
+                    ->at(i)
+                    ->DecodeSignal(&temp_raw);
+            }
+        }
+
+        multiplexor_->DecodeSignal(&temp_raw);
+        size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
+        for (size_t i = 0; i < num_groups; i++)
+        {
+            MultiplexorType multiplexor_value = *multiplexor_;
+            if (static_cast<uint64_t>(multiplexor_value) == signal_groups_.at(i)->multiplexor_value_)
+            {
+                multiplexor_index = i;
+                break;
+            }
+        }
+
+        if (multiplexor_index == 0xFFFFFFFFull)  // If the multiplexor is invalid, don't decode any signals
+        {
+            return;
+        }
+        for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index)->size(); i++)
+        {
+            signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&temp_raw);
+        }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+
+        last_receive_time_ = get_millis_();
+    }
+
+    uint32_t GetLastReceiveTime() const { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
+
+private:
+    ICAN &can_interface_;
+    uint32_t id_;
+    // A function to get the current time in millis on the current platform
+    std::function<uint32_t(void)> get_millis_;
+
+    // The callback function should be a very short function that will get called every time a new message is received.
+    std::function<void(void)> callback_function_;
+
+    ITypedCANSignal<MultiplexorType> *multiplexor_;
+    std::array<IMultiplexedSignalGroup *, num_groups> signal_groups_;
+    bool has_always_active_signal_group_{false};
+    uint64_t always_active_signal_group_index_{0};
+
+    uint64_t multiplexor_index{0};
+
+    uint64_t raw_message;
+
+    uint32_t last_receive_time_ = 0;
+};
+
+template <size_t num_signals>
+class PGNCANRXMessage : public ICANRXMessage
+{
+public:
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<uint32_t(void)> get_millis,
+                    std::function<void(void)> callback_function,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : can_interface_{can_interface},
+          id_{id},
+          get_millis_{get_millis},
+          callback_function_{callback_function},
+          signals_{&signal_1, &signals...}
+    {
+        static_assert(sizeof...(signals) == num_signals - 1, "Wrong number of signals passed into CANRXMessage.");
+        can_interface_.RegisterRXMessage(*this);
+    }
+
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<uint32_t(void)> get_millis,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, get_millis, nullptr, signal_1, signals...}
+    {
+    }
+
+// If compiling for Arduino, automatically uses millis() instead of requiring a std::function<uint32_t(void)> to get the
+// current time
+#ifdef ARDUINO
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface,
+                    PGNCANMessage::ExtendedId id,
+                    std::function<void(void)> callback_function,
+                    ICANSignal &signal_1,
+                    Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, []() { return millis(); }, callback_function, signal_1, signals...}
+    {
+    }
+
+    template <typename... Ts>
+    PGNCANRXMessage(ICAN &can_interface, PGNCANMessage::ExtendedId id, ICANSignal &signal_1, Ts &... signals)
+        : PGNCANRXMessage{can_interface, id, []() { return millis(); }, nullptr, signal_1, signals...}
+    {
+    }
+#endif
+
+    uint32_t GetID() { return id_; }
+
+    void DecodeSignals(CANMessage message)
+    {
+        PGNCANMessage::PGN incoming_pgn =
+            static_cast<PGNCANMessage::PGN>(static_cast<PGNCANMessage::ExtendedId>(message.id_).extended_id.pgn);
+        PGNCANMessage::PGN pgn = static_cast<PGNCANMessage::PGN>(id_.extended_id.pgn);
+        if (incoming_pgn.raw != pgn.raw)
+        {
+            return;
+        }
+        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        for (uint8_t i = 0; i < num_signals; i++)
+        {
+            signals_[i]->DecodeSignal(&temp_raw);
+        }
+
+        // DecodeSignals is called only on message received
+        if (callback_function_)
+        {
+            callback_function_();
+        }
+
+        last_receive_time_ = get_millis_();
+    }
+
+    uint32_t GetLastReceiveTime() const { return last_receive_time_; }
+    uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
+
+private:
+    ICAN &can_interface_;
+    PGNCANMessage::ExtendedId id_;
     // A function to get the current time in millis on the current platform
     std::function<uint32_t(void)> get_millis_;
 
