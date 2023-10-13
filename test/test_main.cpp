@@ -188,7 +188,8 @@ void MultiplexedCANMessageTest(void)
 
     MockCAN can{};
 
-    MultiplexedCANTXMessage<2, uint8_t> tx_msg{can, 100, 8, 100, tx_multiplexor, tx_signals_0, tx_signals_1};
+    MultiplexedCANTXMessage<2, 2, uint8_t> tx_msg{
+        can, 100, 8, 100, std::array<uint8_t, 2>{0, 1}, tx_multiplexor, tx_signals_0, tx_signals_1};
     MultiplexedCANRXMessage<2, uint8_t> rx_msg{
         can, 100, []() { return 0; }, rx_multiplexor, rx_signals_0, rx_signals_1};
 

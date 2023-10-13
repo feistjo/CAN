@@ -6,5 +6,23 @@
   },
   "build": {
     "extraScript": "scripts/esp_can_update.py"
-  }
+  },
+  "examples": [
+    {
+      "name": "CAN_Interface_Demo",
+      "base": "examples/CAN_Interface_Demo",
+      "files": [
+        "platformio.ini",
+        "src/main.cpp"
+      ]
+    },
+    {
+      "name": "CAN_Update_Demo",
+      "base": "examples/CAN_Update_Demo",
+      "files": [
+        "platformio.ini",
+        "src/main.cpp"
+      ]
+    }
+  ]
 }

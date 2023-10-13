@@ -101,6 +101,10 @@ void ESPCAN::Tick()
 
     while (status.msgs_to_rx > 0)
     {
+        if (status.rx_missed_count > 0)
+        {
+            printf("Missed %d CAN messages due to full queue\n", status.rx_missed_count);
+        }
         if (twai_receive(&r_message, TickType_t(100)) == ESP_OK)
         {
             received_message.id_ = r_message.identifier;
