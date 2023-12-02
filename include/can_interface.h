@@ -260,13 +260,20 @@ class CANSignal : public ITypedCANSignal<SignalType>
     using underlying_type = typename GetCANRawType<signed_raw>::type;
 
 public:
-    CANSignal()
+    CANSignal(std::function<SignalType(void)> get_data = nullptr) : get_data_{get_data}
     {
         static_assert(factor != 0, "The integer representation of the factor for a CAN signal must not be 0");
         this->signal_ = static_cast<SignalType>(0);
     }
 
-    void EncodeSignal(uint64_t *buffer) override { InternalEncodeSignal(buffer); }
+    void EncodeSignal(uint64_t *buffer) override
+    {
+        if (get_data_ != nullptr)
+        {
+            this->signal_ = get_data_();
+        }
+        InternalEncodeSignal(buffer);
+    }
 
     template <bool unity_factor_ = unity_factor, typename std::enable_if<unity_factor_, void>::type * = nullptr>
     void InternalEncodeSignal(uint64_t *buffer)
@@ -375,6 +382,9 @@ public:
     SignalType operator*=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator*=(signal); }
 
     SignalType operator/=(const SignalType &signal) { return ITypedCANSignal<SignalType>::operator/=(signal); }
+
+private:
+    std::function<SignalType(void)> get_data_;
 };
 
 // Macros for making signed and unsigned CAN signals, default little-endian
@@ -1021,6 +1031,8 @@ public:
 
         last_receive_time_ = get_millis_();
     }
+
+    void UpdateLastReceiveTime() { last_receive_time_ = get_millis_(); }
 
     uint32_t GetLastReceiveTime() const { return last_receive_time_; }
     uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
