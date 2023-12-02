@@ -11,7 +11,9 @@ def get_data_type(signed, length, factor, offset):
         else:
             return "double"
     if not signed:
-        if factor < 0:
+        if length == 1:
+            return "bool"
+        elif factor < 0:
             return "int" + str(64 if length >= 32 else 32 if length >= 16 else 16 if length >= 8 else 8) + "_t"
         else:
             return "uint" + str(64 if length > 32 else 32 if length > 16 else 16 if length > 8 else 8) + "_t"
