@@ -260,10 +260,13 @@ class CANSignal : public ITypedCANSignal<SignalType>
     using underlying_type = typename GetCANRawType<signed_raw>::type;
 
 public:
-    CANSignal(std::function<SignalType(void)> get_data = nullptr) : get_data_{get_data}
+    CANSignal(std::function<SignalType(void)> get_data) : CANSignal(static_cast<SignalType>(0), get_data) {}
+
+    CANSignal(SignalType init = static_cast<SignalType>(0), std::function<SignalType(void)> get_data = nullptr)
+        : get_data_{get_data}
     {
         static_assert(factor != 0, "The integer representation of the factor for a CAN signal must not be 0");
-        this->signal_ = static_cast<SignalType>(0);
+        this->signal_ = init;
     }
 
     void EncodeSignal(uint64_t *buffer) override
