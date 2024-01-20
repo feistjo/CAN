@@ -83,6 +83,7 @@ bool ESPCAN::SendMessage(CANMessage &msg)
 
 void ESPCAN::Tick()
 {
+    const uint8_t kMaxEvents = 100;
     static std::array<uint8_t, 8> msg_data{};
     static CANMessage received_message{0, 8, msg_data};
     static twai_message_t r_message;
@@ -98,27 +99,27 @@ void ESPCAN::Tick()
     {
         twai_start();
     }
-
-    while (status.msgs_to_rx > 0)
+    uint8_t events = 0;
+    while (status.msgs_to_rx > 0 && events <= kMaxEvents)
     {
-        if (status.msgs_to_rx >= status.rx_missed_count)
-            if (twai_receive(&r_message, TickType_t(100)) == ESP_OK)
-            {
-                received_message.id_ = r_message.identifier;
-                received_message.len_ = r_message.data_length_code;
+        if (twai_receive(&r_message, TickType_t(100)) == ESP_OK)
+        {
+            received_message.id_ = r_message.identifier;
+            received_message.len_ = r_message.data_length_code;
 
-                memcpy(received_message.data_.data(), r_message.data, 8);
+            memcpy(received_message.data_.data(), r_message.data, 8);
 
-                for (size_t i = 0; i < rx_messages_.size(); i++)
-                {
-                    rx_messages_[i]->DecodeSignals(received_message);
-                }
-            }
-            else
+            for (size_t i = 0; i < rx_messages_.size(); i++)
             {
-                printf("Failed to read message from queue\n");
+                rx_messages_[i]->DecodeSignals(received_message);
             }
+        }
+        else
+        {
+            printf("Failed to read message from queue\n");
+        }
         twai_get_status_info(&status);
+        events++;
     }
 }
 

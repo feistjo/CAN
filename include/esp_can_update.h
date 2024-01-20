@@ -54,10 +54,10 @@ private:
     MakeUnsignedCANSignal(uint32_t, 8, 24, 1, 0) data_block_index_{};
     MakeUnsignedCANSignal(uint32_t, 32, 32, 1, 0) update_data_{};
 
-    MultiplexedSignalGroup<1> length_signal_group_{static_cast<uint8_t>(MessageType::kUpdateStart), update_length_};
-    MultiplexedSignalGroup<2> data_signal_group_{
-        static_cast<uint8_t>(MessageType::kUpdateData), data_block_index_, update_data_};
-    MultiplexedSignalGroup<2> md5_signal_group_{static_cast<uint8_t>(MessageType::kMd5), update_md5_idx_, update_md5_};
+    MultiplexedSignalGroup<1, MessageType> length_signal_group_{MessageType::kUpdateStart, update_length_};
+    MultiplexedSignalGroup<2, MessageType> data_signal_group_{
+        MessageType::kUpdateData, data_block_index_, update_data_};
+    MultiplexedSignalGroup<2, MessageType> md5_signal_group_{MessageType::kMd5, update_md5_idx_, update_md5_};
 
     MakeUnsignedCANSignal(uint32_t, 0, 24, 1, 0) update_block_idx_{};
     MakeUnsignedCANSignal(bool, 24, 1, 1, 0) received_len_{};
