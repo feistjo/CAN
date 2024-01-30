@@ -1064,10 +1064,10 @@ public:
         {
             return;
         }
-        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        raw_message_ = *reinterpret_cast<uint64_t *>(message.data_.data());
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->DecodeSignal(&temp_raw);
+            signals_[i]->DecodeSignal(&raw_message_);
         }
 
         // DecodeSignals is called only on message received
@@ -1080,7 +1080,7 @@ public:
     }
 
     void UpdateLastReceiveTime() { last_receive_time_ = get_millis_(); }
-
+    uint64_t GetLastRawMessage() const { return raw_message_; }
     uint32_t GetLastReceiveTime() const { return last_receive_time_; }
     uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
 
@@ -1095,7 +1095,7 @@ private:
 
     std::array<ICANSignal *, num_signals> signals_;
 
-    uint64_t raw_message;
+    uint64_t raw_message_ = 0u;
 
     uint32_t last_receive_time_ = 0;
 };
@@ -1175,7 +1175,7 @@ public:
             return;
         }
 
-        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        raw_message_ = *reinterpret_cast<uint64_t *>(message.data_.data());
 
         if (has_always_active_signal_group_)
         {
@@ -1184,11 +1184,11 @@ public:
             {
                 signal_groups_.at(static_cast<size_t>(always_active_signal_group_index_))
                     ->at(i)
-                    ->DecodeSignal(&temp_raw);
+                    ->DecodeSignal(&raw_message_);
             }
         }
 
-        multiplexor_->DecodeSignal(&temp_raw);
+        multiplexor_->DecodeSignal(&raw_message_);
         size_t multiplexor_index = 0xFFFFFFFFul;  // init to invalid value
         for (size_t i = 0; i < num_groups; i++)
         {
@@ -1207,7 +1207,7 @@ public:
         }
         for (uint8_t i = 0; i < signal_groups_.at(multiplexor_index)->size(); i++)
         {
-            signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&temp_raw);
+            signal_groups_.at(multiplexor_index)->at(i)->DecodeSignal(&raw_message_);
         }
 
         // DecodeSignals is called only on message received
@@ -1238,7 +1238,7 @@ private:
 
     uint64_t multiplexor_index{0};
 
-    uint64_t raw_message;
+    uint64_t raw_message_ = 0u;
 
     uint32_t last_receive_time_ = 0;
 };
@@ -1305,10 +1305,10 @@ public:
         {
             return;
         }
-        uint64_t temp_raw = *reinterpret_cast<uint64_t *>(message.data_.data());
+        raw_message_ = *reinterpret_cast<uint64_t *>(message.data_.data());
         for (uint8_t i = 0; i < num_signals; i++)
         {
-            signals_[i]->DecodeSignal(&temp_raw);
+            signals_[i]->DecodeSignal(&raw_message_);
         }
 
         // DecodeSignals is called only on message received
@@ -1320,6 +1320,7 @@ public:
         last_receive_time_ = get_millis_();
     }
 
+    uint64_t GetLastRawMessage() const { return raw_message_; }
     uint32_t GetLastReceiveTime() const { return last_receive_time_; }
     uint32_t GetTimeSinceLastReceive() const { return get_millis_() - last_receive_time_; }
 
@@ -1334,7 +1335,7 @@ private:
 
     std::array<ICANSignal *, num_signals> signals_;
 
-    uint64_t raw_message;
+    uint64_t raw_message_ = 0u;
 
     uint32_t last_receive_time_ = 0;
 };
