@@ -79,7 +79,7 @@ public:
         ExtendedId(uint8_t source_address, PGN pgn, uint8_t priority)
             : extended_id{.source_address = source_address,
                           .pgn = static_cast<uint32_t>(pgn & 0x3FFFF),
-                          .priority = static_cast<uint8_t>(priority & 0b11)
+                          .priority = static_cast<uint8_t>(priority & 0b111)
 
             }
         {
