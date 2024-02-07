@@ -483,6 +483,8 @@ public:
         kBaud125k = 125000
     };
 
+    virtual ~ICAN() {}
+
     virtual void Initialize(BaudRate baud) = 0;
 
     virtual bool SendMessage(CANMessage &msg) = 0;
