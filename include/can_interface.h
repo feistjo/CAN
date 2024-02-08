@@ -524,7 +524,7 @@ private:
 class IMultiplexedSignalGroup
 {
 public:
-    virtual ICANSignal *at(size_t index) = 0;
+    virtual ICANSignal *at(size_t index) const = 0;
     virtual size_t size() const = 0;
 
     uint64_t multiplexor_value_{0};
@@ -553,7 +553,7 @@ public:
         always_active_ = always_active;
     }
 
-    ICANSignal *at(size_t index) override { return std::array<ICANSignal *, num_signals>::at(index); }
+    ICANSignal *at(size_t index) const override { return std::array<ICANSignal *, num_signals>::at(index); }
 
     size_t size() const override { return std::array<ICANSignal *, num_signals>::size(); }
 };
